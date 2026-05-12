@@ -366,6 +366,7 @@ NEXT_PUBLIC_SITE_URL=https://spellhand.vercel.app
 - [fingerspelling.xyz](https://fingerspelling.xyz) by [DEPT®](https://www.deptagency.com/case/a-pioneering-approach-to-teaching-the-sign-language-alphabet/) and the American Society for Deaf Children — the inspiration
 - [MediaPipe](https://developers.google.com/mediapipe) by Google — hand tracking
 - [`fingerpose`](https://github.com/andypotato/fingerpose) by andypotato — gesture-rule pattern
+- ASL letter illustrations — [Wikimedia Commons](https://commons.wikimedia.org/wiki/Category:American_manual_alphabet) `Sign_language_<L>.svg` series, public domain
 - [Motion](https://motion.dev) — animation
 - [Serwist](https://serwist.pages.dev) — service worker / PWA tooling
 - [shadcn/ui](https://ui.shadcn.com) — components
