@@ -10,7 +10,8 @@
       "Bash(npm --version)",
       "Bash(npm install *)",
       "Bash(npx tsc *)",
-      "WebFetch(domain:commons.wikimedia.org)"
+      "WebFetch(domain:commons.wikimedia.org)",
+      "WebFetch(domain:www.handspeak.com)"
     ]
   }
 }

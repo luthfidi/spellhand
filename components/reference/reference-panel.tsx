@@ -7,6 +7,13 @@ import { LETTER_BY_CODE, type LetterCode } from "@/lib/letters";
 import { pad2, cn } from "@/lib/utils";
 
 /**
+ * Letters whose source SVG is drawn from a perspective opposite our default
+ * convention — we invert the mirror flag for these so the image matches the
+ * user's mirrored video. Add letters here as we discover them.
+ */
+const INVERTED_LETTERS = new Set<LetterCode>(["H"]);
+
+/**
  * The "what shape should I make" panel.
  * Renders a public-domain ASL letter illustration (Wikimedia Commons,
  * inverted for the dark theme). Falls back to a typographic glyph when
@@ -75,6 +82,8 @@ export function ReferencePanel({
 /** Loads the inverted SVG. Falls back to a typographic glyph if missing. */
 function LetterImage({ letter, mirror }: { letter: LetterCode; mirror?: boolean }) {
   const [errored, setErrored] = useState(false);
+  // Some assets are drawn from the opposite perspective — XOR-flip those.
+  const effectiveMirror = INVERTED_LETTERS.has(letter) ? !mirror : mirror;
 
   if (errored) {
     return (
@@ -83,7 +92,7 @@ function LetterImage({ letter, mirror }: { letter: LetterCode; mirror?: boolean 
         size="xl"
         className={cn(
           "text-[18vw] sm:text-[22vw] lg:text-[14vw] xl:text-[12rem] text-bone",
-          mirror && "[transform:scaleX(-1)]",
+          effectiveMirror && "[transform:scaleX(-1)]",
         )}
       />
     );
@@ -99,7 +108,7 @@ function LetterImage({ letter, mirror }: { letter: LetterCode; mirror?: boolean 
         "max-h-full max-w-full object-contain",
         "[filter:invert(0.97)_sepia(0.08)_saturate(0.4)]",
         "[width:auto] [height:auto]",
-        mirror && "[transform:scaleX(-1)]",
+        effectiveMirror && "[transform:scaleX(-1)]",
       )}
       draggable={false}
     />

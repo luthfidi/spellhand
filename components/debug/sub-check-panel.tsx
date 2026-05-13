@@ -1,11 +1,12 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import type { SubCheck } from "@/lib/recognition/types";
 
 /**
  * Floating debug panel. Visible only when the URL has `?debug=1`.
- * Shows the active letter's per-aspect check breakdown for tuning.
+ * Reads location.search directly (not useSearchParams) to avoid the
+ * Next.js CSR-bailout Suspense requirement on statically-generated pages.
  */
 export function SubCheckPanel({
   target,
@@ -16,8 +17,18 @@ export function SubCheckPanel({
   subChecks: SubCheck[] | null;
   confidence: number;
 }) {
-  const params = useSearchParams();
-  if (params.get("debug") !== "1") return null;
+  const [debug, setDebug] = useState(false);
+
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      setDebug(params.get("debug") === "1");
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  if (!debug) return null;
   if (!subChecks || subChecks.length === 0) return null;
 
   return (

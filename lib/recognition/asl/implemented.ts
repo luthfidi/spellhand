@@ -173,20 +173,32 @@ export function ruleG(input: ClassifyInput): RuleResult {
 
 /* ────────────────── H ──────────────────
  * Index + middle extended sideways together; ring/pinky curled.
+ * Further loosened — real-world H lands across a wide threshold range.
  */
 export function ruleH(input: ClassifyInput): RuleResult {
   const { landmarks } = input;
-  const close = tipDistance(landmarks, "index", "middle") < 0.20;
+  const close = tipDistance(landmarks, "index", "middle") < 0.28;
   const idxDx = landmarks[HAND.INDEX_TIP].x - landmarks[HAND.INDEX_MCP].x;
   const idxDy = landmarks[HAND.INDEX_TIP].y - landmarks[HAND.INDEX_MCP].y;
-  const horizontal = Math.abs(idxDx) > Math.abs(idxDy);
+  // Accept up to ~55° tilt from horizontal.
+  const horizontal = Math.abs(idxDx) > Math.abs(idxDy) * 0.7;
   return aggregate("H", [
-    checkExtended(landmarks, "index"),
-    checkExtended(landmarks, "middle"),
-    checkCurled(landmarks, "ring"),
-    checkCurled(landmarks, "pinky"),
-    check("Index + middle touching", close),
-    check("Hand horizontal", horizontal),
+    checkExtended(landmarks, "index", 145),
+    checkExtended(landmarks, "middle", 145),
+    checkCurled(landmarks, "ring", 125),
+    checkCurled(landmarks, "pinky", 125),
+    check(
+      "Index + middle touching",
+      close,
+      [...FINGER_LANDMARKS.index, ...FINGER_LANDMARKS.middle],
+      [...FINGER_CONNECTIONS.index, ...FINGER_CONNECTIONS.middle],
+    ),
+    check(
+      "Hand horizontal",
+      horizontal,
+      [...FINGER_LANDMARKS.index, ...FINGER_LANDMARKS.middle],
+      [...FINGER_CONNECTIONS.index, ...FINGER_CONNECTIONS.middle],
+    ),
   ]);
 }
 
@@ -244,49 +256,30 @@ export function ruleL(input: ClassifyInput): RuleResult {
 }
 
 /* ────────────────── M ──────────────────
- * Three fingers fold over the thumb. Tips drop to or past the knuckle line.
- * Loosened: real M hands rarely fold past MCP by much.
+ * Three fingers half-curled (fold over thumb), pinky fully curled.
+ * Simplified: drop the hidden "tip below MCP" check that was causing silent
+ * failures. The halfCurled bounds alone characterize the fold well enough.
  */
 export function ruleM(input: ClassifyInput): RuleResult {
   const { landmarks } = input;
-  const folded = (["index", "middle", "ring"] as const).every((f) => {
-    const tipIdx = f === "index" ? HAND.INDEX_TIP : f === "middle" ? HAND.MIDDLE_TIP : HAND.RING_TIP;
-    const mcpIdx = f === "index" ? HAND.INDEX_MCP : f === "middle" ? HAND.MIDDLE_MCP : HAND.RING_MCP;
-    // tip Y >= mcpY - 0.04 means tip is at or slightly above MCP — still folded enough.
-    return landmarks[tipIdx].y > landmarks[mcpIdx].y - 0.04;
-  });
   return aggregate("M", [
-    checkHalfCurled(landmarks, "index", 60, 135),
-    checkHalfCurled(landmarks, "middle", 60, 135),
-    checkHalfCurled(landmarks, "ring", 60, 135),
-    checkCurled(landmarks, "pinky"),
-    check(
-      "Three fingers fold downward",
-      folded,
-      [...FINGER_LANDMARKS.index, ...FINGER_LANDMARKS.middle, ...FINGER_LANDMARKS.ring],
-      [...FINGER_CONNECTIONS.index, ...FINGER_CONNECTIONS.middle, ...FINGER_CONNECTIONS.ring],
-    ),
+    checkHalfCurled(landmarks, "index", 60, 130),
+    checkHalfCurled(landmarks, "middle", 60, 130),
+    checkHalfCurled(landmarks, "ring", 60, 130),
+    checkCurled(landmarks, "pinky", 125),
   ]);
 }
 
 /* ────────────────── N ──────────────────
- * Two fingers fold over the thumb. Same tip-below tolerance as M.
+ * Two fingers half-curled (fold over thumb), ring + pinky fully curled.
  */
 export function ruleN(input: ClassifyInput): RuleResult {
   const { landmarks } = input;
-  const idxFolded = landmarks[HAND.INDEX_TIP].y > landmarks[HAND.INDEX_MCP].y - 0.04;
-  const midFolded = landmarks[HAND.MIDDLE_TIP].y > landmarks[HAND.MIDDLE_MCP].y - 0.04;
   return aggregate("N", [
-    checkHalfCurled(landmarks, "index", 60, 135),
-    checkHalfCurled(landmarks, "middle", 60, 135),
-    checkCurled(landmarks, "ring"),
-    checkCurled(landmarks, "pinky"),
-    check(
-      "Two fingers fold downward",
-      idxFolded && midFolded,
-      [...FINGER_LANDMARKS.index, ...FINGER_LANDMARKS.middle],
-      [...FINGER_CONNECTIONS.index, ...FINGER_CONNECTIONS.middle],
-    ),
+    checkHalfCurled(landmarks, "index", 60, 130),
+    checkHalfCurled(landmarks, "middle", 60, 130),
+    checkCurled(landmarks, "ring", 125),
+    checkCurled(landmarks, "pinky", 125),
   ]);
 }
 
