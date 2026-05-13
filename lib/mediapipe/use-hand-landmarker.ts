@@ -67,9 +67,16 @@ export function useHandLandmarker(
       landmarkerRef.current = landmarker;
 
       // ── Camera ──
+      // Landscape capture so when displayed in a portrait/squarish container,
+      // `object-left` / `object-right` can crop toward the dominant-hand side.
       setStatus("requesting-camera");
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: facing, width: { ideal: 720 }, height: { ideal: 960 } },
+        video: {
+          facingMode: facing,
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          aspectRatio: { ideal: 16 / 9 },
+        },
         audio: false,
       });
       streamRef.current = stream;

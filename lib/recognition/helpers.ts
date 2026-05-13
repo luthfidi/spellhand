@@ -1,13 +1,7 @@
-import type { FingerName, Landmark } from "./types";
+import type { LetterCode } from "@/lib/letters";
+import type { Connection, FingerName, Landmark, RuleResult, SubCheck } from "./types";
 
-/* MediaPipe Hand Landmark indices.
- * 0 wrist
- * 1-4   thumb  : CMC, MCP, IP, TIP
- * 5-8   index  : MCP, PIP, DIP, TIP
- * 9-12  middle : MCP, PIP, DIP, TIP
- * 13-16 ring   : MCP, PIP, DIP, TIP
- * 17-20 pinky  : MCP, PIP, DIP, TIP
- */
+/* MediaPipe Hand Landmark indices. */
 export const HAND = {
   WRIST: 0,
   THUMB_CMC: 1, THUMB_MCP: 2, THUMB_IP: 3, THUMB_TIP: 4,
@@ -25,20 +19,30 @@ const FINGER_JOINTS: Record<FingerName, [number, number, number, number]> = {
   pinky:  [HAND.PINKY_MCP, HAND.PINKY_PIP, HAND.PINKY_DIP, HAND.PINKY_TIP],
 };
 
+/** Landmark indices that belong to each finger. */
+export const FINGER_LANDMARKS: Record<FingerName, readonly number[]> = FINGER_JOINTS;
+
+/** Connection pairs that visualize each finger (including the wrist anchor where natural). */
+export const FINGER_CONNECTIONS: Record<FingerName, readonly Connection[]> = {
+  thumb:  [[0, 1], [1, 2], [2, 3], [3, 4]],
+  index:  [[0, 5], [5, 6], [6, 7], [7, 8]],
+  middle: [[9, 10], [10, 11], [11, 12]],
+  ring:   [[13, 14], [14, 15], [15, 16]],
+  pinky:  [[0, 17], [17, 18], [18, 19], [19, 20]],
+};
+
+/* ── Math primitives ── */
+
 export function dist3(a: Landmark, b: Landmark): number {
-  const dx = a.x - b.x;
-  const dy = a.y - b.y;
-  const dz = a.z - b.z;
+  const dx = a.x - b.x, dy = a.y - b.y, dz = a.z - b.z;
   return Math.sqrt(dx * dx + dy * dy + dz * dz);
 }
 
 export function dist2(a: Landmark, b: Landmark): number {
-  const dx = a.x - b.x;
-  const dy = a.y - b.y;
+  const dx = a.x - b.x, dy = a.y - b.y;
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-/** Angle (in degrees) at landmark b between (a→b) and (c→b). */
 export function angleAt(a: Landmark, b: Landmark, c: Landmark): number {
   const ax = a.x - b.x, ay = a.y - b.y, az = a.z - b.z;
   const cx = c.x - b.x, cy = c.y - b.y, cz = c.z - b.z;
@@ -50,13 +54,12 @@ export function angleAt(a: Landmark, b: Landmark, c: Landmark): number {
   return (Math.acos(cos) * 180) / Math.PI;
 }
 
-/** PIP-joint angle. ~180° = fully extended, ~80° = fully curled. */
 export function pipAngle(landmarks: Landmark[], finger: FingerName): number {
   const [mcp, pip, dip] = FINGER_JOINTS[finger];
   return angleAt(landmarks[mcp], landmarks[pip], landmarks[dip]);
 }
 
-export function isExtended(landmarks: Landmark[], finger: FingerName, threshold = 160): boolean {
+export function isExtended(landmarks: Landmark[], finger: FingerName, threshold = 150): boolean {
   return pipAngle(landmarks, finger) >= threshold;
 }
 
@@ -64,60 +67,92 @@ export function isCurled(landmarks: Landmark[], finger: FingerName, threshold = 
   return pipAngle(landmarks, finger) <= threshold;
 }
 
-/** Tip-to-MCP distance (normalized to wrist→middle-MCP as palm length). */
-export function fingerSpan(landmarks: Landmark[], finger: FingerName): number {
-  const [mcp, , , tip] = FINGER_JOINTS[finger];
-  const palmLen = dist3(landmarks[HAND.WRIST], landmarks[HAND.MIDDLE_MCP]) || 1;
-  return dist3(landmarks[mcp], landmarks[tip]) / palmLen;
-}
-
-/** Tip position helper. */
 export function tip(landmarks: Landmark[], finger: FingerName): Landmark {
   return landmarks[FINGER_JOINTS[finger][3]];
 }
 
-/** Distance between two fingertips, normalized by palm length. */
 export function tipDistance(landmarks: Landmark[], a: FingerName, b: FingerName): number {
   const palmLen = dist3(landmarks[HAND.WRIST], landmarks[HAND.MIDDLE_MCP]) || 1;
   return dist3(tip(landmarks, a), tip(landmarks, b)) / palmLen;
 }
 
-/** Whether all listed fingers are curled. */
-export function allCurled(landmarks: Landmark[], fingers: FingerName[]): boolean {
-  return fingers.every((f) => isCurled(landmarks, f));
+/* ── Sub-check builders ── */
+
+const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
+
+export function checkCurled(landmarks: Landmark[], finger: FingerName, threshold = 110): SubCheck {
+  return {
+    label: `${cap(finger)} curled`,
+    satisfied: isCurled(landmarks, finger, threshold),
+    landmarks: FINGER_LANDMARKS[finger],
+    connections: FINGER_CONNECTIONS[finger],
+  };
 }
 
-/** Whether all listed fingers are extended. */
-export function allExtended(landmarks: Landmark[], fingers: FingerName[]): boolean {
-  return fingers.every((f) => isExtended(landmarks, f));
+export function checkExtended(landmarks: Landmark[], finger: FingerName, threshold = 150): SubCheck {
+  return {
+    label: `${cap(finger)} extended`,
+    satisfied: isExtended(landmarks, finger, threshold),
+    landmarks: FINGER_LANDMARKS[finger],
+    connections: FINGER_CONNECTIONS[finger],
+  };
 }
 
-export type PalmDirection = "up" | "down" | "left" | "right" | "forward" | "back";
+export function checkHalfCurled(
+  landmarks: Landmark[],
+  finger: FingerName,
+  min = 80,
+  max = 160,
+): SubCheck {
+  const a = pipAngle(landmarks, finger);
+  return {
+    label: `${cap(finger)} half-curled`,
+    satisfied: a >= min && a <= max,
+    landmarks: FINGER_LANDMARKS[finger],
+    connections: FINGER_CONNECTIONS[finger],
+  };
+}
 
-/** Rough palm-facing direction in screen space. */
+/**
+ * Generic check for any boolean condition that targets specific landmarks.
+ * Pass `[]` for landmarks/connections if it's a relation that has no
+ * visual finger to color (it still counts toward confidence).
+ */
+export function check(
+  label: string,
+  satisfied: boolean,
+  landmarks: readonly number[] = [],
+  connections: readonly Connection[] = [],
+): SubCheck {
+  return { label, satisfied, landmarks, connections };
+}
+
+/* ── Aggregate ── */
+
+export function aggregate(letter: LetterCode, subChecks: SubCheck[]): RuleResult {
+  const passed = subChecks.filter((c) => c.satisfied).length;
+  return {
+    letter,
+    match: passed === subChecks.length,
+    confidence: passed / subChecks.length,
+    subChecks,
+    hints: subChecks
+      .filter((c) => !c.satisfied)
+      .slice(0, 2)
+      .map((c) => ({ kind: "fingers" as const, message: c.label })),
+  };
+}
+
+/* ── Palm direction (still used for some letters) ── */
+
+export type PalmDirection = "up" | "down" | "left" | "right";
+
 export function palmDirection(landmarks: Landmark[]): PalmDirection {
-  // Vector from wrist to middle MCP (palm axis).
   const w = landmarks[HAND.WRIST];
   const m = landmarks[HAND.MIDDLE_MCP];
-  const p = landmarks[HAND.PINKY_MCP];
   const i = landmarks[HAND.INDEX_MCP];
-
+  const p = landmarks[HAND.PINKY_MCP];
   const ax = m.x - w.x, ay = m.y - w.y;
-
-  // Determine fingers-pointing direction.
-  if (Math.abs(ay) > Math.abs(ax)) {
-    if (ay < 0) return "up"; // y is inverted in image coords; smaller y = up
-    return "down";
-  }
-  // Otherwise pointing sideways
-  // Determine palm normal (left/right) via cross between index-MCP and pinky-MCP
+  if (Math.abs(ay) > Math.abs(ax)) return ay < 0 ? "up" : "down";
   return i.x < p.x ? "left" : "right";
-  // z-based forward/back inference omitted (less reliable on web)
-}
-
-/** Map [0,1]→0..1 confidence with smooth ease near edges. */
-export function smooth01(x: number): number {
-  if (x <= 0) return 0;
-  if (x >= 1) return 1;
-  return x * x * (3 - 2 * x);
 }

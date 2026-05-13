@@ -61,7 +61,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${display.variable} ${mono.variable}`}>
-      <body className="min-h-svh antialiased">{children}</body>
+      <body className="min-h-svh overflow-x-clip antialiased">{children}</body>
     </html>
   );
 }

@@ -20,16 +20,30 @@ export interface Hint {
   message: string;
 }
 
+/**
+ * A single sub-condition that a letter rule decomposes into.
+ * - `satisfied`: whether this specific condition is currently met
+ * - `landmarks` + `connections`: which parts of the skeleton this condition
+ *   pertains to (so the overlay can highlight unsatisfied parts in grey).
+ */
+export type Connection = readonly [number, number];
+
+export interface SubCheck {
+  label: string;
+  satisfied: boolean;
+  landmarks: readonly number[];
+  connections: readonly Connection[];
+}
+
 export interface RuleResult {
-  /** Letter that this rule represents. */
   letter: LetterCode;
-  /** True if landmarks satisfy the rule strongly. */
   match: boolean;
-  /** 0..1 — how confident the rule is. Used for soft "almost!" feedback. */
+  /** 0..1, derived from sub-check pass rate. */
   confidence: number;
-  /** Optional human-readable corrections. Shown when not matching. */
+  /** Per-aspect breakdown. The overlay reads this to color the skeleton. */
+  subChecks?: SubCheck[];
+  /** Short corrective hints shown when not matching. */
   hints?: Hint[];
-  /** True if no real rule exists yet (placeholder). */
   notImplemented?: boolean;
 }
 
