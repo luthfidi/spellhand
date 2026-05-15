@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Instrument_Serif, IBM_Plex_Mono } from "next/font/google";
+import { ErrorBoundary } from "@/components/error-boundary";
 import "./globals.css";
 
 const display = Instrument_Serif({
@@ -61,7 +62,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${display.variable} ${mono.variable}`}>
-      <body className="min-h-svh overflow-x-clip antialiased">{children}</body>
+      <body className="min-h-svh overflow-x-clip antialiased">
+        <ErrorBoundary>{children}</ErrorBoundary>
+      </body>
     </html>
   );
 }

@@ -3,7 +3,7 @@
 > Learn the American Sign Language alphabet with your camera. A mobile-friendly remake of [fingerspelling.xyz](https://fingerspelling.xyz), powered by MediaPipe and Supabase.
 
 **Live (target):** [spellhand.vercel.app](https://spellhand.vercel.app)
-**Status:** Planning phase. No code yet.
+**Status:** Phase 1 (MVP) — frontend complete, backend integration next.
 **UI language:** English (i18n-ready).
 
 ---
@@ -241,36 +241,52 @@ All user-owned tables get RLS: `auth.uid() = user_id`. The `certificates` table 
 
 ---
 
-## Proposed folder structure
+## Folder structure (current)
 
 ```
 sign-language/
 ├── README.md
-├── app/                       # Next.js App Router
-│   ├── (marketing)/           # landing, about
-│   ├── play/                  # main game
-│   ├── practice/[letter]/     # single-letter practice
-│   ├── profile/               # progress & stats
-│   └── cert/[token]/          # public shareable certificate page
+├── .env.example                          # template for Phase 2+ env vars
+├── app/                                  # Next.js App Router
+│   ├── page.tsx                          # / → HeroStage
+│   ├── layout.tsx                        # fonts, metadata, ErrorBoundary
+│   ├── _stages/                          # reusable stage components
+│   │   ├── stage-motion.ts               # shared slide+fade config
+│   │   ├── hero-stage.tsx
+│   │   ├── level-select-stage.tsx
+│   │   ├── level-intro-stage.tsx
+│   │   ├── play-stage.tsx                # numbered levels (1–4)
+│   │   └── challenge-stage.tsx           # final exam + cert end screen
+│   ├── levels/page.tsx                   # /levels (with hand-pref modal)
+│   ├── levels/[level]/page.tsx           # /levels/1..4 intro
+│   ├── play/[level]/page.tsx             # /play/1..4 gameplay
+│   ├── challenge/page.tsx                # /challenge (memory-only mode)
+│   └── practice/[letter]/page.tsx        # /practice/a..y study mode
 ├── components/
-│   ├── camera/                # webcam + permission UI
-│   ├── feedback/              # hints, scores, animations
-│   ├── letter-reference/      # photo / 3D viewer
-│   ├── certificate/           # certificate UI + PDF template
-│   └── ui/                    # shadcn primitives
+│   ├── camera/                           # video, landmark overlay, gate
+│   ├── reference/game-left-panel.tsx     # hand image + letter + word strip
+│   ├── specimen/                         # catalogue cards on landing
+│   ├── onboard/hand-preference-modal.tsx
+│   ├── marks/spellhand-mark.tsx
+│   ├── debug/sub-check-panel.tsx         # ?debug=1 floating panel
+│   └── error-boundary.tsx
 ├── lib/
-│   ├── mediapipe/             # HandLandmarker setup + types
+│   ├── mediapipe/use-hand-landmarker.ts  # MediaPipe + camera lifecycle
 │   ├── recognition/
-│   │   ├── asl/               # rule files: a.ts, b.ts, ...
-│   │   ├── bisindo/           # (Phase 7)
-│   │   └── classify.ts        # language-agnostic dispatcher
-│   ├── game/                  # level logic, scoring, word picker
-│   ├── certificates/          # issue + verify + render
-│   └── supabase/              # client, server, types
-├── public/
-│   └── letters/asl/           # a.png, b.png, ... (Phase 1 photos)
-└── types/
+│   │   ├── asl/implemented.ts            # per-letter sub-check rules
+│   │   ├── classify.ts                   # dispatcher
+│   │   ├── helpers.ts                    # angle / curl / extended / aggregate
+│   │   └── types.ts                      # Landmark, SubCheck, RuleResult
+│   ├── hooks/use-hand-preference.ts      # localStorage RH/LH
+│   ├── letters.ts                        # 24 LetterMeta entries
+│   ├── levels.ts                         # LEVELS 1–4 + CHALLENGE
+│   └── utils.ts                          # cn(), pad2()
+└── public/
+    └── letters/asl/                      # a.svg .. y.svg (Wikimedia, PD)
 ```
+
+**Phase 2+ additions** (not yet created): `middleware.ts`, `app/cert/[token]/`,
+`lib/supabase/`, `lib/certificates/`.
 
 ---
 

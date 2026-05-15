@@ -2,52 +2,70 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { motion } from "motion/react";
-import { TopNav } from "@/components/nav/top-nav";
-import { Viewfinder } from "@/components/camera/viewfinder";
+import { motion, AnimatePresence } from "motion/react";
 import { LandmarkOverlay } from "@/components/camera/landmark-overlay";
-import { ReferencePanel } from "@/components/reference/reference-panel";
+import { CameraGate } from "@/components/camera/camera-gate";
+import { ConfidenceDisplay } from "@/components/feedback/confidence-display";
+import { LockedRing } from "@/components/feedback/locked-ring";
+import { LetterGlyph } from "@/components/specimen/letter-glyph";
+import { SpellhandMark } from "@/components/marks/spellhand-mark";
 import { useHandLandmarker } from "@/lib/mediapipe/use-hand-landmarker";
 import { useHandPreference } from "@/lib/hooks/use-hand-preference";
 import { classifyAgainstTarget } from "@/lib/recognition/classify";
-import { LETTERS, type LetterMeta } from "@/lib/letters";
+import { LETTERS, type LetterCode, type LetterMeta } from "@/lib/letters";
 import type { SubCheck } from "@/lib/recognition/types";
 import { SubCheckPanel } from "@/components/debug/sub-check-panel";
 import { cn, pad2 } from "@/lib/utils";
 
+const INVERTED_LETTERS = new Set<LetterCode>(["H"]);
+
 export function PracticeSession({ meta }: { meta: LetterMeta }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [facing, setFacing] = useState<"user" | "environment">("user");
+  const [facing] = useState<"user" | "environment">("user");
   const { hand: storedHand, setHand } = useHandPreference();
   const hand = storedHand ?? "right";
   const { status, error, detection, start, stop } = useHandLandmarker(videoRef, { facing });
 
   const [confidence, setConfidence] = useState(0);
   const [hint, setHint] = useState<string | null>(null);
-  const [locked, setLocked] = useState(false);
   const [subChecks, setSubChecks] = useState<SubCheck[] | null>(null);
+
+  // Auto-start camera on mount.
+  useEffect(() => {
+    start();
+    return () => stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!detection) return;
     const { result } = classifyAgainstTarget(detection, meta.code);
     setConfidence(result.confidence);
     setSubChecks(result.subChecks ?? null);
-    if (result.match) {
-      setHint(null);
-      setLocked(true);
-      const t = setTimeout(() => setLocked(false), 800);
-      return () => clearTimeout(t);
-    } else {
-      setLocked(false);
-      setHint(result.hints?.[0]?.message ?? null);
-    }
+    if (result.match) setHint(null);
+    else setHint(result.hints?.[0]?.message ?? null);
   }, [detection, meta.code]);
 
-  const handleFlip = useCallback(() => {
-    setFacing((f) => (f === "user" ? "environment" : "user"));
-    stop();
-    setTimeout(() => start(), 80);
-  }, [stop, start]);
+  // Reset when target letter changes (user clicked an arrow).
+  useEffect(() => {
+    setConfidence(0);
+    setSubChecks(null);
+    setHint(null);
+  }, [meta.code]);
+
+  // Reset when hand leaves frame.
+  useEffect(() => {
+    if (detection || status !== "running") return;
+    setConfidence(0);
+    setSubChecks(null);
+    setHint("Place your hand inside the frame.");
+    const t = setInterval(() => {
+      setHint("Place your hand inside the frame.");
+      setConfidence(0);
+      setSubChecks(null);
+    }, 400);
+    return () => clearInterval(t);
+  }, [detection, status]);
 
   const mirrored = facing === "user";
   const flipReference = mirrored && hand === "right";
@@ -59,49 +77,42 @@ export function PracticeSession({ meta }: { meta: LetterMeta }) {
   return (
     <main className="flex h-svh flex-col overflow-hidden bg-ink">
       <SubCheckPanel target={meta.code} subChecks={subChecks} confidence={confidence} />
-      <TopNav
-        caption={`§ ${pad2(meta.index)} / 24 · ${meta.nato.toUpperCase()}`}
-        rightSlot={
+
+      {/* Compact header — wordmark + NATO + hand toggle + end */}
+      <header className="ruled-b sticky top-0 z-30 bg-ink/85 backdrop-blur-sm">
+        <div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-4 sm:px-6">
+          <SpellhandMark href="/" />
+          <span className="caption">
+            § {pad2(meta.index)} / 24 · {meta.nato.toUpperCase()}
+          </span>
           <div className="flex items-center gap-3 sm:gap-5">
             <button
               onClick={() => setHand(hand === "right" ? "left" : "right")}
               className="caption hover:text-acid"
               aria-label="Toggle dominant hand"
             >
-              {hand === "right" ? "RH" : "LH"}
+              {hand === "right" ? "RIGHT HANDED" : "LEFT HANDED"}
             </button>
-            <button
-              onClick={handleFlip}
-              disabled={!running}
-              className="caption hover:text-acid disabled:opacity-30"
-              aria-label="Flip camera"
-            >
-              ⟲
-            </button>
-            <Link href={`/practice/${prev.code.toLowerCase()}`} className="caption hover:text-acid">
-              ← {prev.code}
+            <Link href="/" className="caption hover:text-acid">
+              END
             </Link>
-            <Link href={`/practice/${next.code.toLowerCase()}`} className="caption hover:text-acid">
-              {next.code} →
-            </Link>
-            <Link href="/" className="caption hover:text-acid hidden sm:inline">END</Link>
           </div>
-        }
-      />
+        </div>
+      </header>
 
-      {/* ──────── REF + CAMERA SPLIT ──────── */}
-      <div className="grid flex-1 grid-cols-1 overflow-hidden lg:grid-cols-2">
-        {/* Reference — opposite side from camera */}
+      {/* REF + CAMERA SPLIT — same as PlayStage */}
+      <div className="grid flex-1 grid-cols-1 grid-rows-2 overflow-hidden lg:grid-cols-2 lg:grid-rows-1">
+        {/* Reference */}
         <div
           className={cn(
             "relative border-b border-rule lg:border-b-0",
             hand === "right" ? "lg:order-1 lg:border-r" : "lg:order-2 lg:border-l",
           )}
         >
-          <ReferencePanel letter={meta.code} mirror={flipReference} variant="practice" />
+          <PracticeReferencePanel letter={meta.code} mirror={flipReference} />
         </div>
 
-        {/* Camera — dominant-hand side */}
+        {/* Camera */}
         <div
           className={cn(
             "relative overflow-hidden bg-black",
@@ -120,6 +131,16 @@ export function PracticeSession({ meta }: { meta: LetterMeta }) {
             autoPlay
             aria-label="Camera viewport"
           />
+
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 z-10"
+            style={{
+              background:
+                "radial-gradient(ellipse at center, rgba(0,0,0,0) 35%, rgba(0,0,0,0.55) 100%)",
+            }}
+          />
+
           <LandmarkOverlay
             landmarks={detection?.landmarks ?? null}
             videoRef={videoRef}
@@ -127,90 +148,181 @@ export function PracticeSession({ meta }: { meta: LetterMeta }) {
             objectPosition={hand === "right" ? "left" : "right"}
             subChecks={subChecks}
           />
-          <Viewfinder caption={running ? "REC · LOCAL ONLY" : "STANDBY"} active={running} />
 
-          {/* Lock badge */}
-          {locked ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="absolute right-3 top-3 hairline bg-acid px-3 py-1.5 text-ink"
-            >
-              <span className="font-mono text-xs tracking-[0.12em]">LOCKED</span>
-            </motion.div>
+          {running ? (
+            <div className="pointer-events-none absolute right-5 top-4 z-20 text-right">
+              <ConfidenceDisplay confidence={confidence} />
+            </div>
           ) : null}
 
-          {/* Pre-flight gate */}
+          <LockedRing active={running && confidence >= 0.999} />
+
+          <div className="pointer-events-none absolute inset-x-0 bottom-5 z-20 flex justify-center px-6">
+            <AnimatePresence mode="wait">
+              {running && hint ? (
+                <motion.div
+                  key={hint}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.2 }}
+                  className="hairline rounded-full bg-ink/75 px-4 py-2 backdrop-blur-sm sm:px-5 sm:py-2.5"
+                >
+                  <p className="font-mono text-xs text-bone sm:text-sm">
+                    <span className="text-acid">→</span> {hint}
+                  </p>
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
+          </div>
+
           {!running ? (
-            <div className="absolute inset-0 flex items-center justify-center bg-ink/96 px-6 text-center">
-              <PreFlight status={status} error={error} onStart={start} />
+            <div className="absolute inset-0 z-30 flex items-center justify-center bg-ink/96 px-6 text-center">
+              <CameraGate status={status} error={error} onRetry={start} />
             </div>
           ) : null}
         </div>
       </div>
 
-      {/* ──────── BOTTOM STRIP ──────── */}
-      <div className="ruled-t bg-ink">
-        <div className="mx-auto flex max-w-2xl items-center gap-4 px-4 py-3 sm:gap-6">
-          <span className="caption shrink-0">CONFIDENCE</span>
-          <div className="relative h-[2px] flex-1 bg-rule">
-            <motion.div
-              className="absolute inset-y-0 left-0 bg-acid"
-              animate={{ width: `${confidence * 100}%` }}
-              transition={{ duration: 0.12 }}
-            />
-          </div>
-          <span className="caption w-10 shrink-0 text-right text-bone">
-            {Math.round(confidence * 100)}%
-          </span>
-        </div>
-        <div className="ruled-t">
-          <div className="mx-auto flex h-9 max-w-2xl items-center justify-center px-4">
-            {hint ? (
-              <p className="text-center font-mono text-xs text-bone-2 sm:text-sm">
-                <span className="text-acid">→</span> {hint}
-              </p>
-            ) : null}
-          </div>
-        </div>
-      </div>
+      {/* Big edge arrows — always visible */}
+      <EdgeArrow
+        side="left"
+        href={`/practice/${prev.code.toLowerCase()}`}
+        letter={prev.code}
+        label="PREV"
+      />
+      <EdgeArrow
+        side="right"
+        href={`/practice/${next.code.toLowerCase()}`}
+        letter={next.code}
+        label="NEXT"
+      />
     </main>
   );
 }
 
-function PreFlight({
-  status,
-  error,
-  onStart,
-}: {
-  status: ReturnType<typeof useHandLandmarker>["status"];
-  error: string | null;
-  onStart: () => void;
-}) {
-  if (status === "loading-model") return <Loader caption="LOADING MODEL" />;
-  if (status === "requesting-camera") return <Loader caption="AWAITING CAMERA" />;
-  if (status === "permission-denied")
-    return (
-      <p className="max-w-sm font-mono text-sm text-bone-2">
-        Camera permission denied. Enable it in your browser settings and refresh.
-      </p>
-    );
-  if (status === "error")
-    return <p className="max-w-sm font-mono text-sm text-bone-2">{error}</p>;
-  return (
-    <button onClick={onStart} className="bg-acid px-7 py-4 font-mono text-sm text-ink">
-      START CAMERA →
-    </button>
-  );
-}
+/* ────────────── Reference (hand + letter, no word/chrome) ────────────── */
 
-function Loader({ caption }: { caption: string }) {
+function PracticeReferencePanel({
+  letter,
+  mirror,
+}: {
+  letter: LetterCode;
+  mirror: boolean;
+}) {
   return (
-    <div className="flex flex-col items-center gap-3">
-      <p className="caption-acid">{caption}</p>
-      <div className="h-[2px] w-32 overflow-hidden bg-rule">
-        <div className="h-full w-1/3 animate-sweep bg-acid" />
+    <div className="relative flex h-full w-full bg-ink-2">
+      <div className="flex flex-1 items-center justify-center gap-1 overflow-hidden px-2 py-2 sm:gap-2 sm:px-3 sm:py-3">
+        <div className="relative flex h-full flex-[2.2] items-center justify-center">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={letter}
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.99 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              className="flex h-full w-full items-center justify-center"
+            >
+              <LetterImage letter={letter} mirror={mirror} />
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        <div className="flex flex-1 items-center justify-center">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={letter}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.3 }}
+            >
+              <LetterGlyph
+                letter={letter}
+                size="xl"
+                className="text-[20vw] leading-none text-bone sm:text-[15vw] lg:text-[12vw] xl:text-[12rem]"
+              />
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );
 }
+
+function LetterImage({ letter, mirror }: { letter: LetterCode; mirror: boolean }) {
+  const [errored, setErrored] = useState(false);
+  const effectiveMirror = INVERTED_LETTERS.has(letter) ? !mirror : mirror;
+
+  if (errored) {
+    return (
+      <LetterGlyph
+        letter={letter}
+        size="xl"
+        className={cn(
+          "text-[24vw] sm:text-[18vw] lg:text-[14vw] xl:text-[12rem] text-bone",
+          effectiveMirror && "[transform:scaleX(-1)]",
+        )}
+      />
+    );
+  }
+  // eslint-disable-next-line @next/next/no-img-element
+  return (
+    <img
+      src={`/letters/asl/${letter.toLowerCase()}.svg`}
+      alt={`Hand shape for the letter ${letter}`}
+      onError={() => setErrored(true)}
+      className={cn(
+        "max-h-full max-w-full object-contain",
+        "[filter:invert(0.97)_sepia(0.08)_saturate(0.4)]",
+        "[width:auto] [height:auto]",
+        effectiveMirror && "[transform:scaleX(-1)]",
+      )}
+      draggable={false}
+    />
+  );
+}
+
+/* ────────────── Edge arrows (prev / next) ────────────── */
+
+function EdgeArrow({
+  side,
+  href,
+  letter,
+  label,
+}: {
+  side: "left" | "right";
+  href: string;
+  letter: string;
+  label: string;
+}) {
+  const initialX = side === "left" ? -40 : 40;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: initialX }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: initialX }}
+      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+      className={cn(
+        "fixed top-1/2 z-40 -translate-y-1/2",
+        side === "left" ? "left-3 sm:left-5" : "right-3 sm:right-5",
+      )}
+    >
+      <Link
+        href={href}
+        className="group hairline flex flex-col items-center gap-1 bg-acid px-3 py-5 text-ink shadow-xl transition-transform hover:scale-105 sm:px-5 sm:py-7"
+        aria-label={`Go to letter ${letter}`}
+      >
+        <span className="font-mono text-[10px] tracking-[0.15em] sm:text-xs">{label}</span>
+        <span className="font-[family-name:var(--font-display-loaded)] text-4xl italic leading-none sm:text-6xl">
+          {letter}
+        </span>
+        <span className="font-mono text-lg leading-none sm:text-2xl" aria-hidden>
+          {side === "left" ? "←" : "→"}
+        </span>
+      </Link>
+    </motion.div>
+  );
+}
+

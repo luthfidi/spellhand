@@ -177,7 +177,7 @@ export function ruleG(input: ClassifyInput): RuleResult {
  */
 export function ruleH(input: ClassifyInput): RuleResult {
   const { landmarks } = input;
-  const close = tipDistance(landmarks, "index", "middle") < 0.28;
+  const close = tipDistance(landmarks, "index", "middle") < 0.38;
   const idxDx = landmarks[HAND.INDEX_TIP].x - landmarks[HAND.INDEX_MCP].x;
   const idxDy = landmarks[HAND.INDEX_TIP].y - landmarks[HAND.INDEX_MCP].y;
   // Accept up to ~55° tilt from horizontal.
@@ -256,30 +256,38 @@ export function ruleL(input: ClassifyInput): RuleResult {
 }
 
 /* ────────────────── M ──────────────────
- * Three fingers half-curled (fold over thumb), pinky fully curled.
- * Simplified: drop the hidden "tip below MCP" check that was causing silent
- * failures. The halfCurled bounds alone characterize the fold well enough.
+ * Fist with thumb tucked under three fingers. From 2D landmarks, M is
+ * indistinguishable from N — the difference is which fingers cover the thumb,
+ * which a single camera can't reliably see. The rule accepts a wide curl range
+ * and uses thumb position to differentiate from A (thumb side) and S (thumb front).
  */
 export function ruleM(input: ClassifyInput): RuleResult {
   const { landmarks } = input;
+  const thumbTucked =
+    landmarks[HAND.THUMB_TIP].y > landmarks[HAND.INDEX_MCP].y - 0.01;
   return aggregate("M", [
-    checkHalfCurled(landmarks, "index", 60, 130),
-    checkHalfCurled(landmarks, "middle", 60, 130),
-    checkHalfCurled(landmarks, "ring", 60, 130),
-    checkCurled(landmarks, "pinky", 125),
+    checkHalfCurled(landmarks, "index", 30, 150),
+    checkHalfCurled(landmarks, "middle", 30, 150),
+    checkHalfCurled(landmarks, "ring", 30, 150),
+    checkHalfCurled(landmarks, "pinky", 30, 150),
+    check("Thumb tucked under fingers", thumbTucked, THUMB_LM, THUMB_CON),
   ]);
 }
 
 /* ────────────────── N ──────────────────
- * Two fingers half-curled (fold over thumb), ring + pinky fully curled.
+ * Fist with thumb tucked under two fingers. Same 2D ambiguity as M — the rule
+ * is intentionally permissive; the reference image teaches the difference.
  */
 export function ruleN(input: ClassifyInput): RuleResult {
   const { landmarks } = input;
+  const thumbTucked =
+    landmarks[HAND.THUMB_TIP].y > landmarks[HAND.INDEX_MCP].y - 0.01;
   return aggregate("N", [
-    checkHalfCurled(landmarks, "index", 60, 130),
-    checkHalfCurled(landmarks, "middle", 60, 130),
-    checkCurled(landmarks, "ring", 125),
-    checkCurled(landmarks, "pinky", 125),
+    checkHalfCurled(landmarks, "index", 30, 150),
+    checkHalfCurled(landmarks, "middle", 30, 150),
+    checkHalfCurled(landmarks, "ring", 30, 150),
+    checkHalfCurled(landmarks, "pinky", 30, 150),
+    check("Thumb tucked under fingers", thumbTucked, THUMB_LM, THUMB_CON),
   ]);
 }
 

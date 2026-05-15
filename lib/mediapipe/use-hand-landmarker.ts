@@ -45,12 +45,37 @@ export function useHandLandmarker(
   const rafRef = useRef<number | null>(null);
   const lastDetectionTsRef = useRef(0);
   const runningRef = useRef(false);
+  // Guard against StrictMode double-mount and rapid re-entry.
+  const startingRef = useRef(false);
+  const pausedRef = useRef(false);
+
+  const stop = useCallback(() => {
+    runningRef.current = false;
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    landmarkerRef.current = null;
+    startingRef.current = false;
+    pausedRef.current = false;
+    setDetection(null);
+    setStatus("idle");
+  }, [videoRef]);
 
   const start = useCallback(async () => {
+    // Idempotent — ignore if already starting or running.
+    if (startingRef.current || runningRef.current) return;
+    startingRef.current = true;
     setError(null);
 
     try {
-      // ── Load MediaPipe ──
       setStatus("loading-model");
       const vision = await import("@mediapipe/tasks-vision");
       const { HandLandmarker, FilesetResolver } = vision;
@@ -66,9 +91,6 @@ export function useHandLandmarker(
       });
       landmarkerRef.current = landmarker;
 
-      // ── Camera ──
-      // Landscape capture so when displayed in a portrait/squarish container,
-      // `object-left` / `object-right` can crop toward the dominant-hand side.
       setStatus("requesting-camera");
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -90,14 +112,17 @@ export function useHandLandmarker(
 
       setStatus("ready");
 
-      // ── Detection loop ──
       const minFrameInterval = 1000 / maxFps;
       runningRef.current = true;
+      startingRef.current = false;
       setStatus("running");
 
       const tick = () => {
         if (!runningRef.current) return;
         rafRef.current = requestAnimationFrame(tick);
+
+        // Skip detection while tab hidden — saves battery / GPU.
+        if (pausedRef.current) return;
 
         const now = performance.now();
         if (now - lastDetectionTsRef.current < minFrameInterval) return;
@@ -121,14 +146,14 @@ export function useHandLandmarker(
           } else {
             setDetection(null);
           }
-        } catch (e) {
-          // Swallow per-frame errors to avoid breaking the loop.
-          console.warn("Detection frame failed:", e);
+        } catch {
+          // Swallow per-frame errors silently — they shouldn't break the loop.
         }
       };
       rafRef.current = requestAnimationFrame(tick);
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e);
+      startingRef.current = false;
       if (message.toLowerCase().includes("permission") || message.includes("NotAllowed")) {
         setStatus("permission-denied");
       } else {
@@ -138,28 +163,29 @@ export function useHandLandmarker(
     }
   }, [videoRef, facing, maxFps]);
 
-  const stop = useCallback(() => {
-    runningRef.current = false;
-    if (rafRef.current) {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-    }
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop());
-      streamRef.current = null;
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-    setDetection(null);
-    setStatus("idle");
-  }, [videoRef]);
+  /** Full stop → start cycle. Used by "Play Again" flows. */
+  const restart = useCallback(async () => {
+    stop();
+    // Give the previous stream a tick to release before re-requesting.
+    await new Promise((r) => setTimeout(r, 50));
+    await start();
+  }, [stop, start]);
 
+  // Pause detection loop while document is hidden (tab switch / minimised).
+  useEffect(() => {
+    const onVisibility = () => {
+      pausedRef.current = document.hidden;
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, []);
+
+  // Cleanup on unmount.
   useEffect(() => {
     return () => {
       stop();
     };
   }, [stop]);
 
-  return { status, error, detection, start, stop };
+  return { status, error, detection, start, stop, restart };
 }

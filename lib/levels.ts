@@ -10,7 +10,7 @@ export interface LevelDef {
   newLetters: LetterCode[];
   /** Tagline shown on the intro page. */
   blurb: string;
-  /** Curated 10-word list. Every letter in every word is in the pool. */
+  /** Curated word list. Every letter in every word is in the pool. */
   words: string[];
 }
 
@@ -27,21 +27,21 @@ export const LEVELS: Record<LevelNumber, LevelDef> = {
     pool: poolUpTo(1),
     newLetters: lettersFor(1),
     blurb: "Get ready to learn the letters A, B, C, E, L, O, V, W, U, Y.",
-    words: ["ACE", "BAY", "BOY", "COW", "OWL", "OWE", "VOW", "CAVE", "CLAY", "OVAL"],
+    words: ["ACE", "BOY", "COW", "OWL", "CAVE", "CLAY"],
   },
   2: {
     number: 2,
     pool: poolUpTo(2),
     newLetters: lettersFor(2),
     blurb: "We add the letters D, F, I, K, R, S, T to your vocabulary.",
-    words: ["DICE", "FACE", "RIDE", "KITE", "USE", "SET", "IDEA", "FAST", "RICE", "STAR"],
+    words: ["DICE", "FACE", "KITE", "FAST", "RIDE", "STAR"],
   },
   3: {
     number: 3,
     pool: poolUpTo(3),
     newLetters: lettersFor(3),
     blurb: "Ready for more — this time G, H, M, N, X.",
-    words: ["GAME", "HEAT", "MAN", "NICE", "MIX", "HUG", "SING", "MEAN", "HAND", "THINK"],
+    words: ["GAME", "MAN", "MIX", "HUG", "NICE", "THINK"],
   },
   4: {
     number: 4,
@@ -49,7 +49,7 @@ export const LEVELS: Record<LevelNumber, LevelDef> = {
     newLetters: lettersFor(4),
     blurb:
       "Two letters where you turn your hand downward — P and Q. (J and Z need motion and arrive in a future edition.)",
-    words: ["POP", "CUP", "HOP", "MAP", "QUARK", "QUIET", "QUEST", "HAPPY", "SOUP", "PASTE"],
+    words: ["POP", "CUP", "MAP", "QUARK", "QUIET", "HAPPY"],
   },
 };
 
@@ -60,3 +60,25 @@ export function levelFromParam(raw: string): LevelDef | null {
   if (n === 1 || n === 2 || n === 3 || n === 4) return LEVELS[n];
   return null;
 }
+
+/**
+ * The final challenge — exam mode.
+ * Pool: all 24 static letters. No reference image during play.
+ * Completing all words earns the certificate.
+ */
+export const CHALLENGE = {
+  pool: LETTERS.map((l) => l.code),
+  blurb: "No reference image. From memory. Ten words spanning every static letter.",
+  words: [
+    "ALPHABET",
+    "QUICKLY",
+    "NIGHT",
+    "WOLF",
+    "MAX",
+    "RUSH",
+    "SPEND",
+    "DREAM",
+    "WAVE",
+    "FACT",
+  ],
+} as const;

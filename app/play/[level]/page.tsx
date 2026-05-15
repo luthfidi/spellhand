@@ -1,18 +1,14 @@
 import { notFound } from "next/navigation";
 import { LEVEL_NUMBERS, levelFromParam } from "@/lib/levels";
-import { PlaySession } from "./play-session";
+import { PlayClient } from "./play-client";
 
 export function generateStaticParams() {
   return LEVEL_NUMBERS.map((n) => ({ level: String(n) }));
 }
 
-interface Params {
-  params: Promise<{ level: string }>;
-}
-
-export default async function PlayLevelPage({ params }: Params) {
+export default async function PlayPage({ params }: { params: Promise<{ level: string }> }) {
   const { level: raw } = await params;
   const lv = levelFromParam(raw);
   if (!lv) notFound();
-  return <PlaySession level={lv} />;
+  return <PlayClient level={lv.number} />;
 }
