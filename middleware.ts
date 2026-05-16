@@ -32,7 +32,13 @@ export async function middleware(request: NextRequest) {
   });
 
   // Trigger token refresh. Result intentionally unused here.
-  await supabase.auth.getUser();
+  // Swallow errors so a Supabase outage / misconfig never bricks the site —
+  // pages will just render in a signed-out state.
+  try {
+    await supabase.auth.getUser();
+  } catch {
+    // no-op
+  }
 
   return response;
 }
