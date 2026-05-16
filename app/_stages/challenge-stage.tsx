@@ -8,6 +8,7 @@ import { SubCheckPanel } from "@/components/debug/sub-check-panel";
 import { ConfidenceDisplay } from "@/components/feedback/confidence-display";
 import { LockedRing } from "@/components/feedback/locked-ring";
 import { LetterGlyph } from "@/components/specimen/letter-glyph";
+import { SpellhandMark } from "@/components/marks/spellhand-mark";
 import { useHandLandmarker } from "@/lib/mediapipe/use-hand-landmarker";
 import { classifyAgainstTarget } from "@/lib/recognition/classify";
 import { CHALLENGE } from "@/lib/levels";
@@ -24,11 +25,9 @@ const PROGRESS_LOCK = 1.0;
 export function ChallengeStage({
   hand,
   onBack,
-  onHome,
 }: {
   hand: Hand;
   onBack: () => void;
-  onHome: () => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const facing: "user" | "environment" = "user";
@@ -132,7 +131,7 @@ export function ChallengeStage({
   }, [restart]);
 
   if (complete) {
-    return <CertificateEarned score={score} onReplay={replay} onHome={onHome} />;
+    return <CertificateEarned score={score} onReplay={replay} />;
   }
 
   return (
@@ -345,30 +344,46 @@ function MemoryLeftPanel({
 function CertificateEarned({
   score,
   onReplay,
-  onHome,
 }: {
   score: { correct: number; attempted: number };
   onReplay: () => void;
-  onHome: () => void;
 }) {
   const accuracy = score.attempted ? Math.round((score.correct / score.attempted) * 100) : 0;
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const display = name.trim() || "— your name —";
-  const today = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const canSubmit = name.trim().length > 0 && email.includes("@") && !sending && !sent;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canSubmit) return;
+    setSending(true);
+    setError(null);
+    try {
+      const { sendCertMagicLink } = await import("@/app/_actions/auth");
+      const res = await sendCertMagicLink(email, name);
+      if ("error" in res) {
+        setError(res.error);
+      } else {
+        setSent(true);
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to send link.");
+    } finally {
+      setSending(false);
+    }
+  };
 
   return (
     <motion.main {...STAGE_MOTION} className="flex min-h-svh flex-col bg-ink">
       <header className="ruled-b">
         <div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <button onClick={onHome} className="caption hover:text-acid">
-            ← Home
-          </button>
+          <SpellhandMark href="/" />
           <span className="caption-acid">CERTIFICATE EARNED</span>
-          <span aria-hidden></span>
         </div>
       </header>
 
@@ -390,68 +405,101 @@ function CertificateEarned({
           You earned it.
         </motion.h1>
 
-        {/* The certificate — stamp-style entrance */}
+        {/* Live preview certificate */}
         <motion.div
           initial={{ opacity: 0, y: 24, scale: 1.05, rotate: -1.5 }}
           animate={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
           transition={{ delay: 0.35, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          className="hairline relative mt-10 aspect-[4/3] w-full max-w-3xl bg-ink-2 p-6 sm:p-10"
+          className="hairline relative mt-10 aspect-[4/3] w-full max-w-3xl bg-ink-2 p-4 sm:p-10"
         >
-          <div className="hairline-soft absolute inset-3 sm:inset-5" aria-hidden />
-          {["left-3 top-3", "right-3 top-3", "left-3 bottom-3", "right-3 bottom-3"].map((c) => (
+          <div className="hairline-soft absolute inset-2 sm:inset-5" aria-hidden />
+          {["left-2 top-2 sm:left-3 sm:top-3", "right-2 top-2 sm:right-3 sm:top-3", "left-2 bottom-2 sm:left-3 sm:bottom-3", "right-2 bottom-2 sm:right-3 sm:bottom-3"].map((c) => (
             <span key={c} aria-hidden className={`absolute ${c} h-1.5 w-1.5 bg-acid`} />
           ))}
           <div className="relative flex h-full flex-col items-center justify-center text-center">
-            <p className="caption-acid">SPELLHAND</p>
-            <p className="mt-3 font-[family-name:var(--font-display-loaded)] text-3xl italic leading-tight sm:text-5xl">
-              Certificate of
-              <br />
-              Fingerspelling
+            <p className="caption-acid text-[10px] sm:text-xs">SPELLHAND</p>
+            <p className="mt-2 font-[family-name:var(--font-display-loaded)] text-2xl italic leading-tight sm:mt-3 sm:text-5xl">
+              Certificate of<br />Fingerspelling
             </p>
-            <p className="caption mt-6 text-bone-3">awarded to</p>
-            <p className="mt-1 font-[family-name:var(--font-display-loaded)] text-xl italic text-bone sm:text-3xl">
+            <p className="caption mt-4 text-bone-3 sm:mt-6">awarded to</p>
+            <p className="mt-1 font-[family-name:var(--font-display-loaded)] text-lg italic text-bone sm:text-3xl">
               {display}
             </p>
-            <p className="caption mt-6 max-w-xs text-bone-3">
+            <p className="caption mt-4 max-w-xs text-bone-3 sm:mt-6">
               for mastering the American Sign Language alphabet
             </p>
-            <p className="caption mt-4 text-bone-3">{today}</p>
           </div>
         </motion.div>
 
-        {/* Name input */}
-        <div className="mt-8 flex w-full max-w-md flex-col items-center gap-3">
-          <label htmlFor="cert-name" className="caption text-bone-2">
-            Your name on the certificate
-          </label>
-          <input
-            id="cert-name"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            maxLength={40}
-            placeholder="e.g. Luthfi"
-            className="hairline w-full bg-ink px-4 py-3 text-center font-mono text-sm text-bone outline-none placeholder:text-bone-3 focus:border-acid focus:bg-ink-2"
-          />
-        </div>
-
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-5">
-          <button
-            onClick={onReplay}
-            className="hairline bg-ink px-6 py-3 font-mono text-sm hover:bg-acid hover:text-ink"
+        {/* Claim form */}
+        {!sent ? (
+          <motion.form
+            onSubmit={handleSubmit}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7, duration: 0.5 }}
+            className="mt-10 flex w-full max-w-md flex-col items-center gap-3"
           >
-            PLAY AGAIN
-          </button>
-          <button
-            onClick={onHome}
-            className="inline-flex items-center gap-3 bg-acid px-6 py-3 font-mono text-sm text-ink"
+            <p className="caption text-bone-2">Claim your certificate</p>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              maxLength={40}
+              placeholder="Your name (e.g. Luthfi)"
+              autoComplete="name"
+              required
+              className="hairline w-full bg-ink px-4 py-3 text-center font-mono text-sm text-bone outline-none placeholder:text-bone-3 focus:border-acid focus:bg-ink-2"
+            />
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="your@email.com"
+              autoComplete="email"
+              required
+              className="hairline w-full bg-ink px-4 py-3 text-center font-mono text-sm text-bone outline-none placeholder:text-bone-3 focus:border-acid focus:bg-ink-2"
+            />
+            {error ? (
+              <p className="caption text-blood">{error}</p>
+            ) : null}
+            <button
+              type="submit"
+              disabled={!canSubmit}
+              className="mt-2 inline-flex w-full items-center justify-center gap-3 bg-acid px-6 py-3 font-mono text-sm text-ink transition-transform hover:-translate-y-px disabled:opacity-50 disabled:hover:translate-y-0"
+            >
+              {sending ? "SENDING…" : "CLAIM MY CERTIFICATE →"}
+            </button>
+            <p className="caption mt-2 max-w-xs text-center text-bone-3">
+              We&apos;ll email you a sign-in link. No password needed.
+            </p>
+            <button
+              type="button"
+              onClick={onReplay}
+              className="caption mt-4 hover:text-acid"
+            >
+              ← play again instead
+            </button>
+          </motion.form>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="mt-10 flex w-full max-w-md flex-col items-center gap-3 text-center"
           >
-            FINISH <span aria-hidden>→</span>
-          </button>
-        </div>
-        <p className="caption mt-6 max-w-md text-center text-bone-3">
-          A downloadable PDF and shareable link arrive when accounts ship.
-        </p>
+            <p className="caption-acid">CHECK YOUR INBOX</p>
+            <p className="font-[family-name:var(--font-display-loaded)] text-3xl italic leading-tight sm:text-4xl">
+              Magic link sent.
+            </p>
+            <p className="font-mono text-sm leading-relaxed text-bone-2">
+              We sent a sign-in link to <span className="text-bone">{email}</span>.
+              <br />
+              Click it to claim your certificate.
+            </p>
+            <p className="caption mt-2 text-bone-3">You can close this tab.</p>
+          </motion.div>
+        )}
       </div>
     </motion.main>
   );

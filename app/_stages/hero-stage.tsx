@@ -6,6 +6,21 @@ import { SpellhandMark } from "@/components/marks/spellhand-mark";
 import { SpecimenSheet } from "@/components/specimen/specimen-sheet";
 import { STAGE_MOTION } from "./stage-motion";
 
+const STEPS = [
+  {
+    title: "Show your hand.",
+    body: "The camera tracks 21 points in your browser.",
+  },
+  {
+    title: "Match the shape.",
+    body: "Skeleton turns acid when correct. Hold to lock the letter.",
+  },
+  {
+    title: "Earn the certificate.",
+    body: "Finish the final Challenge — spell every word from memory.",
+  },
+];
+
 export function HeroStage({ onBegin }: { onBegin: () => void }) {
   return (
     <motion.main {...STAGE_MOTION} className="min-h-svh">
@@ -67,7 +82,7 @@ export function HeroStage({ onBegin }: { onBegin: () => void }) {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.75, duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-              className="mt-8 sm:mt-14"
+              className="mt-8 flex flex-col items-center gap-4 sm:mt-14"
             >
               <button
                 onClick={onBegin}
@@ -87,6 +102,14 @@ export function HeroStage({ onBegin }: { onBegin: () => void }) {
                   →
                 </span>
               </button>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.05, duration: 0.6 }}
+                className="caption text-bone-3"
+              >
+                Camera stays in your browser · no video uploaded
+              </motion.p>
             </motion.div>
           </div>
 
@@ -97,7 +120,9 @@ export function HeroStage({ onBegin }: { onBegin: () => void }) {
             className="caption flex items-center justify-between gap-3 border-t border-rule py-3 sm:py-4"
           >
             <div className="flex items-center gap-3 sm:gap-5">
-              <a href="#catalogue" className="hover:text-acid">↓ Catalogue</a>
+              <a href="#how" className="hover:text-acid">↓ How</a>
+              <span className="text-bone-3">·</span>
+              <a href="#catalogue" className="hover:text-acid">Catalogue</a>
               <span className="text-bone-3">·</span>
               <a href="#certificate" className="hover:text-acid">Certificate</a>
             </div>
@@ -112,6 +137,44 @@ export function HeroStage({ onBegin }: { onBegin: () => void }) {
         </div>
       </section>
 
+      {/* How it works */}
+      <section id="how" className="ruled-b scroll-mt-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.4 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="mx-auto max-w-6xl px-4 pt-10 pb-4 sm:px-6 sm:pt-16"
+        >
+          <p className="caption mb-2">§ 01 · How it works</p>
+          <h2 className="font-[family-name:var(--font-display-loaded)] text-3xl italic leading-[0.95] sm:text-5xl">
+            Three steps.
+          </h2>
+        </motion.div>
+        <div className="ruled-t -mx-px">
+          <div className="grid grid-cols-1 md:grid-cols-3 [&>*]:border-l [&>*]:border-r [&>*]:border-rule [&>*]:-ml-px">
+            {STEPS.map((step, i) => (
+              <motion.div
+                key={step.title}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ delay: i * 0.12, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                className="relative bg-ink px-5 py-7 sm:px-8 sm:py-10"
+              >
+                <p className="caption-acid">STEP {String(i + 1).padStart(2, "0")}</p>
+                <p className="mt-3 font-[family-name:var(--font-display-loaded)] text-2xl italic leading-tight sm:text-3xl">
+                  {step.title}
+                </p>
+                <p className="mt-3 max-w-xs text-sm leading-relaxed text-bone-2">
+                  {step.body}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Catalogue */}
       <section id="catalogue" className="ruled-b scroll-mt-12">
         <motion.div
@@ -121,7 +184,7 @@ export function HeroStage({ onBegin }: { onBegin: () => void }) {
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="mx-auto max-w-6xl px-4 pt-10 pb-4 sm:px-6 sm:pt-16"
         >
-          <p className="caption mb-2">§ 01 · The catalogue</p>
+          <p className="caption mb-2">§ 02 · The catalogue</p>
           <h2 className="font-[family-name:var(--font-display-loaded)] text-3xl italic leading-[0.95] sm:text-5xl">
             Twenty-four specimens.
           </h2>
@@ -146,7 +209,7 @@ export function HeroStage({ onBegin }: { onBegin: () => void }) {
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="lg:col-span-5"
           >
-            <p className="caption mb-2">§ 02 · The certificate</p>
+            <p className="caption mb-2">§ 03 · The certificate</p>
             <h2 className="font-[family-name:var(--font-display-loaded)] text-3xl italic leading-[0.95] sm:text-5xl">
               One reward.
             </h2>

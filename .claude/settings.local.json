@@ -13,7 +13,9 @@
       "WebFetch(domain:commons.wikimedia.org)",
       "WebFetch(domain:www.handspeak.com)",
       "Bash(xargs grep -l \"console\\\\.\")",
-      "PowerShell(Get-ChildItem -Force | Where-Object { $_.Name -match '\\\\.env|middleware|next\\\\.config' } | Select-Object Name)"
+      "PowerShell(Get-ChildItem -Force | Where-Object { $_.Name -match '\\\\.env|middleware|next\\\\.config' } | Select-Object Name)",
+      "WebFetch(domain:supabase.com)",
+      "WebFetch(domain:www.npmjs.com)"
     ]
   }
 }

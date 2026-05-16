@@ -19,7 +19,6 @@ export function ChallengeClient() {
     <ChallengeStage
       hand={hand}
       onBack={() => router.push("/levels")}
-      onHome={() => router.push("/")}
     />
   );
 }

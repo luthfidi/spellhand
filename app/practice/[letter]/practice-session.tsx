@@ -17,7 +17,9 @@ import type { SubCheck } from "@/lib/recognition/types";
 import { SubCheckPanel } from "@/components/debug/sub-check-panel";
 import { cn, pad2 } from "@/lib/utils";
 
-const INVERTED_LETTERS = new Set<LetterCode>(["H"]);
+const INVERTED_LETTERS = new Set<LetterCode>(["G", "H", "P", "Q"]);
+const NEEDS_PERSPECTIVE_NOTE = new Set<LetterCode>(["G", "H", "P", "Q"]);
+const ROTATED_LETTERS = new Map<LetterCode, number>();
 
 export function PracticeSession({ meta }: { meta: LetterMeta }) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -221,9 +223,16 @@ function PracticeReferencePanel({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.99 }}
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="flex h-full w-full items-center justify-center"
+              className="flex max-h-full max-w-full flex-col items-center gap-2 sm:gap-3"
             >
-              <LetterImage letter={letter} mirror={mirror} />
+              {NEEDS_PERSPECTIVE_NOTE.has(letter) ? (
+                <p className="caption-acid whitespace-nowrap text-center text-sm tracking-[0.14em] sm:text-base">
+                  PALM FACES AWAY FROM CAMERA
+                </p>
+              ) : null}
+              <div className="flex min-h-0 w-full flex-1 items-center justify-center">
+                <LetterImage letter={letter} mirror={mirror} />
+              </div>
             </motion.div>
           </AnimatePresence>
         </div>
@@ -253,16 +262,18 @@ function PracticeReferencePanel({
 function LetterImage({ letter, mirror }: { letter: LetterCode; mirror: boolean }) {
   const [errored, setErrored] = useState(false);
   const effectiveMirror = INVERTED_LETTERS.has(letter) ? !mirror : mirror;
+  const rotation = ROTATED_LETTERS.get(letter) ?? 0;
+  const transform =
+    (effectiveMirror ? "scaleX(-1) " : "") + (rotation ? `rotate(${rotation}deg)` : "");
+  const style = transform.trim() ? { transform } : undefined;
 
   if (errored) {
     return (
       <LetterGlyph
         letter={letter}
         size="xl"
-        className={cn(
-          "text-[24vw] sm:text-[18vw] lg:text-[14vw] xl:text-[12rem] text-bone",
-          effectiveMirror && "[transform:scaleX(-1)]",
-        )}
+        className="text-[24vw] sm:text-[18vw] lg:text-[14vw] xl:text-[12rem] text-bone"
+        style={style}
       />
     );
   }
@@ -276,8 +287,8 @@ function LetterImage({ letter, mirror }: { letter: LetterCode; mirror: boolean }
         "max-h-full max-w-full object-contain",
         "[filter:invert(0.97)_sepia(0.08)_saturate(0.4)]",
         "[width:auto] [height:auto]",
-        effectiveMirror && "[transform:scaleX(-1)]",
       )}
+      style={style}
       draggable={false}
     />
   );

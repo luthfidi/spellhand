@@ -9,11 +9,13 @@ export function LetterGlyph({
   className,
   italic = true,
   size = "lg",
+  style,
 }: {
   letter: string;
   className?: string;
   italic?: boolean;
   size?: "sm" | "md" | "lg" | "xl";
+  style?: React.CSSProperties;
 }) {
   const sizes = {
     sm: "text-5xl",
@@ -30,6 +32,7 @@ export function LetterGlyph({
         sizes[size],
         className,
       )}
+      style={style}
     >
       {letter}
     </span>
