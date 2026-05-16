@@ -2,47 +2,46 @@
 
 import Link from "next/link";
 import { motion } from "motion/react";
+import { useTranslations } from "next-intl";
 import { SpellhandMark } from "@/components/marks/spellhand-mark";
 import { SpecimenSheet } from "@/components/specimen/specimen-sheet";
+import { LocaleToggle } from "@/components/locale-toggle";
 import { STAGE_MOTION } from "./stage-motion";
 
-const STEPS = [
-  {
-    title: "Show your hand.",
-    body: "The camera tracks 21 points in your browser.",
-  },
-  {
-    title: "Match the shape.",
-    body: "Skeleton turns acid when correct. Hold to lock the letter.",
-  },
-  {
-    title: "Earn the certificate.",
-    body: "Finish the final Challenge — spell every word from memory.",
-  },
-];
-
 export function HeroStage({ onBegin }: { onBegin: () => void }) {
+  const t = useTranslations("hero");
+  const steps = [
+    { title: t("step_1_title"), body: t("step_1_body") },
+    { title: t("step_2_title"), body: t("step_2_body") },
+    { title: t("step_3_title"), body: t("step_3_body") },
+  ];
   return (
     <motion.main {...STAGE_MOTION} className="min-h-svh">
       {/* Edition strip */}
       <div className="ruled-b">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-3 py-2 sm:px-6">
           <SpellhandMark />
-          <motion.a
+          <motion.div
             initial={{ opacity: 0, x: 8 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 1.1, duration: 0.5 }}
-            href="https://github.com/luthfidi"
-            target="_blank"
-            rel="noreferrer"
-            className="caption group hover:text-acid"
+            className="flex items-center gap-3 sm:gap-4"
           >
-            <span className="hidden sm:inline">made by luthfidi</span>
-            <span className="sm:hidden">@luthfidi</span>{" "}
-            <span aria-hidden className="inline-block transition-transform group-hover:translate-x-0.5">
-              →
-            </span>
-          </motion.a>
+            <LocaleToggle />
+            <span aria-hidden className="text-bone-3">·</span>
+            <a
+              href="https://github.com/luthfidi"
+              target="_blank"
+              rel="noreferrer"
+              className="caption group hover:text-acid"
+            >
+              <span className="hidden sm:inline">{t("made_by")}</span>
+              <span className="sm:hidden">{t("made_by_short")}</span>{" "}
+              <span aria-hidden className="inline-block transition-transform group-hover:translate-x-0.5">
+                →
+              </span>
+            </a>
+          </motion.div>
         </div>
       </div>
 
@@ -58,7 +57,7 @@ export function HeroStage({ onBegin }: { onBegin: () => void }) {
                 transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
                 className="block"
               >
-                Learn the
+                {t("tagline_1")}
               </motion.span>
               <motion.span
                 initial={{ opacity: 0, y: 32 }}
@@ -66,7 +65,7 @@ export function HeroStage({ onBegin }: { onBegin: () => void }) {
                 transition={{ delay: 0.18, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
                 className="block text-acid not-italic"
               >
-                alphabet
+                {t("tagline_2")}
               </motion.span>
               <motion.span
                 initial={{ opacity: 0, y: 32 }}
@@ -74,7 +73,7 @@ export function HeroStage({ onBegin }: { onBegin: () => void }) {
                 transition={{ delay: 0.36, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
                 className="block"
               >
-                by hand.
+                {t("tagline_3")}
               </motion.span>
             </h1>
 
@@ -93,7 +92,7 @@ export function HeroStage({ onBegin }: { onBegin: () => void }) {
                   className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/45 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-full"
                 />
                 <span className="relative font-mono text-base font-medium tracking-[0.06em] sm:text-xl">
-                  LET&apos;S GO
+                  {t("cta")}
                 </span>
                 <span
                   aria-hidden
@@ -108,7 +107,7 @@ export function HeroStage({ onBegin }: { onBegin: () => void }) {
                 transition={{ delay: 1.05, duration: 0.6 }}
                 className="caption text-bone-3"
               >
-                Camera stays in your browser · no video uploaded
+                {t("privacy_note")}
               </motion.p>
             </motion.div>
           </div>
@@ -120,11 +119,11 @@ export function HeroStage({ onBegin }: { onBegin: () => void }) {
             className="caption flex items-center justify-between gap-3 border-t border-rule py-3 sm:py-4"
           >
             <div className="flex items-center gap-3 sm:gap-5">
-              <a href="#how" className="hover:text-acid">↓ How</a>
+              <a href="#how" className="hover:text-acid">{t("nav_how")}</a>
               <span className="text-bone-3">·</span>
-              <a href="#catalogue" className="hover:text-acid">Catalogue</a>
+              <a href="#catalogue" className="hover:text-acid">{t("nav_catalogue")}</a>
               <span className="text-bone-3">·</span>
-              <a href="#certificate" className="hover:text-acid">Certificate</a>
+              <a href="#certificate" className="hover:text-acid">{t("nav_certificate")}</a>
             </div>
             <motion.span
               aria-hidden
@@ -146,14 +145,14 @@ export function HeroStage({ onBegin }: { onBegin: () => void }) {
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="mx-auto max-w-6xl px-4 pt-10 pb-4 sm:px-6 sm:pt-16"
         >
-          <p className="caption mb-2">§ 01 · How it works</p>
+          <p className="caption mb-2">{t("section_how_eyebrow")}</p>
           <h2 className="font-[family-name:var(--font-display-loaded)] text-3xl italic leading-[0.95] sm:text-5xl">
-            Three steps.
+            {t("section_how_title")}
           </h2>
         </motion.div>
         <div className="ruled-t -mx-px">
           <div className="grid grid-cols-1 md:grid-cols-3 [&>*]:border-l [&>*]:border-r [&>*]:border-rule [&>*]:-ml-px">
-            {STEPS.map((step, i) => (
+            {steps.map((step, i) => (
               <motion.div
                 key={step.title}
                 initial={{ opacity: 0, y: 16 }}
@@ -184,9 +183,9 @@ export function HeroStage({ onBegin }: { onBegin: () => void }) {
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="mx-auto max-w-6xl px-4 pt-10 pb-4 sm:px-6 sm:pt-16"
         >
-          <p className="caption mb-2">§ 02 · The catalogue</p>
+          <p className="caption mb-2">{t("section_catalogue_eyebrow")}</p>
           <h2 className="font-[family-name:var(--font-display-loaded)] text-3xl italic leading-[0.95] sm:text-5xl">
-            Twenty-four specimens.
+            {t("section_catalogue_title")}
           </h2>
         </motion.div>
         <motion.div
@@ -209,12 +208,12 @@ export function HeroStage({ onBegin }: { onBegin: () => void }) {
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="lg:col-span-5"
           >
-            <p className="caption mb-2">§ 03 · The certificate</p>
+            <p className="caption mb-2">{t("section_cert_eyebrow")}</p>
             <h2 className="font-[family-name:var(--font-display-loaded)] text-3xl italic leading-[0.95] sm:text-5xl">
-              One reward.
+              {t("section_cert_title")}
             </h2>
             <p className="mt-5 max-w-sm text-sm leading-relaxed text-bone-2 sm:mt-6">
-              Complete the Challenge — spell every word from memory, no reference. One certificate, signed and dated.
+              {t("section_cert_body")}
             </p>
           </motion.div>
 
@@ -240,16 +239,16 @@ export function HeroStage({ onBegin }: { onBegin: () => void }) {
                 />
               ))}
               <div className="relative flex h-full flex-col items-center justify-center px-2 text-center sm:px-0">
-                <p className="caption-acid text-[10px] sm:text-xs">SPELLHAND</p>
+                <p className="caption-acid text-[10px] sm:text-xs">{t("cert_brand")}</p>
                 <p className="mt-2 font-[family-name:var(--font-display-loaded)] text-2xl italic leading-tight sm:mt-3 sm:text-5xl">
-                  Certificate of<br />Fingerspelling
+                  {t("cert_title_line_1")}<br />{t("cert_title_line_2")}
                 </p>
-                <p className="caption mt-4 text-bone-3 sm:mt-6">awarded to</p>
+                <p className="caption mt-4 text-bone-3 sm:mt-6">{t("cert_awarded")}</p>
                 <p className="mt-1 font-[family-name:var(--font-display-loaded)] text-lg italic text-bone-2 sm:text-2xl">
-                  — your name —
+                  {t("cert_name_placeholder")}
                 </p>
                 <p className="caption mt-4 max-w-xs text-bone-3 sm:mt-6">
-                  for mastering the American Sign Language alphabet
+                  {t("cert_subtitle")}
                 </p>
               </div>
             </div>
@@ -268,20 +267,20 @@ export function HeroStage({ onBegin }: { onBegin: () => void }) {
         >
           <div>
             <SpellhandMark />
-            <p className="caption mt-2 text-bone-3">A field guide to the ASL alphabet.</p>
+            <p className="caption mt-2 text-bone-3">{t("footer_tagline")}</p>
           </div>
-          <div className="caption flex flex-wrap gap-x-5 gap-y-2 text-bone-3 sm:gap-x-6">
+          <div className="caption flex flex-wrap items-center gap-x-5 gap-y-2 text-bone-3 sm:gap-x-6">
             <a href="https://commons.wikimedia.org/wiki/Category:American_manual_alphabet" className="hover:text-acid" target="_blank" rel="noreferrer">
-              Illustrations
+              {t("footer_illustrations")}
             </a>
             <a href="https://developers.google.com/mediapipe" className="hover:text-acid" target="_blank" rel="noreferrer">
-              MediaPipe
+              {t("footer_mediapipe")}
             </a>
             <a href="https://fingerspelling.xyz" className="hover:text-acid" target="_blank" rel="noreferrer">
-              Inspired by fingerspelling.xyz
+              {t("footer_inspired")}
             </a>
-            <Link href="/practice/a" className="hover:text-acid">Practice individual letters</Link>
-            <span>© Spellhand</span>
+            <Link href="/practice/a" className="hover:text-acid">{t("footer_practice")}</Link>
+            <span>{t("footer_copy")}</span>
           </div>
         </motion.div>
       </footer>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
+import { useLocale, useTranslations } from "next-intl";
 import { SpellhandMark } from "@/components/marks/spellhand-mark";
 
 export function CertificateView({
@@ -14,7 +15,9 @@ export function CertificateView({
   displayName: string;
   issuedAt: string;
 }) {
-  const dateLabel = new Date(issuedAt).toLocaleDateString("en-US", {
+  const t = useTranslations("cert");
+  const locale = useLocale();
+  const dateLabel = new Date(issuedAt).toLocaleDateString(locale === "id" ? "id-ID" : "en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -35,7 +38,7 @@ export function CertificateView({
 
   const shareOnX = () => {
     const url = `${window.location.origin}/cert/${token}`;
-    const text = `I earned my Spellhand certificate — ASL fingerspelling alphabet, every letter from memory.`;
+    const text = t("share_text");
     window.open(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
       "_blank",
@@ -69,7 +72,7 @@ export function CertificateView({
       <header className="ruled-b">
         <div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-4 sm:px-6">
           <SpellhandMark href="/" />
-          <span className="caption-acid">CERTIFICATE</span>
+          <span className="caption-acid">{t("header")}</span>
         </div>
       </header>
 
@@ -80,7 +83,7 @@ export function CertificateView({
           transition={{ duration: 0.4 }}
           className="caption-acid"
         >
-          AWARDED · {dateLabel.toUpperCase()}
+          {t("awarded_on", { date: dateLabel.toUpperCase() })}
         </motion.p>
 
         <motion.h1
@@ -109,16 +112,16 @@ export function CertificateView({
             <span key={c} aria-hidden className={`absolute ${c} h-1.5 w-1.5 bg-acid`} />
           ))}
           <div className="relative flex h-full flex-col items-center justify-center px-2 text-center sm:px-0">
-            <p className="caption-acid text-[10px] sm:text-xs">SPELLHAND</p>
+            <p className="caption-acid text-[10px] sm:text-xs">{t("brand")}</p>
             <p className="mt-2 font-[family-name:var(--font-display-loaded)] text-2xl italic leading-tight sm:mt-3 sm:text-5xl">
-              Certificate of<br />Fingerspelling
+              {t("title_line_1")}<br />{t("title_line_2")}
             </p>
-            <p className="caption mt-4 text-bone-3 sm:mt-6">awarded to</p>
+            <p className="caption mt-4 text-bone-3 sm:mt-6">{t("awarded_to")}</p>
             <p className="mt-1 font-[family-name:var(--font-display-loaded)] text-xl italic text-bone sm:text-3xl">
               {displayName}
             </p>
             <p className="caption mt-4 max-w-xs text-bone-3 sm:mt-6">
-              for mastering the American Sign Language alphabet
+              {t("subtitle")}
             </p>
             <p className="caption mt-3 text-bone-3 sm:mt-4">{dateLabel}</p>
           </div>
@@ -135,22 +138,22 @@ export function CertificateView({
             disabled={downloading}
             className="hairline bg-ink px-6 py-3 font-mono text-sm transition-transform hover:-translate-y-px hover:bg-acid hover:text-ink disabled:opacity-50 disabled:hover:translate-y-0"
           >
-            {downloading ? "GENERATING…" : "DOWNLOAD"}
+            {downloading ? t("download_busy") : t("download_idle")}
           </button>
           <button
             onClick={copyLink}
             className="hairline bg-ink px-6 py-3 font-mono text-sm transition-transform hover:-translate-y-px hover:bg-acid hover:text-ink"
           >
-            {copied ? "LINK COPIED ✓" : "COPY LINK"}
+            {copied ? t("copy_done") : t("copy_idle")}
           </button>
           <button
             onClick={shareOnX}
             className="inline-flex items-center gap-3 bg-acid px-6 py-3 font-mono text-sm text-ink transition-transform hover:-translate-y-px"
           >
-            SHARE ON X <span aria-hidden>→</span>
+            {t("share_x")} <span aria-hidden>→</span>
           </button>
           <Link href="/" className="caption hover:text-acid">
-            ← Home
+            {t("home")}
           </Link>
         </motion.div>
       </div>

@@ -1,8 +1,10 @@
 "use client";
 
 import { motion } from "motion/react";
+import { useTranslations } from "next-intl";
 import { CHALLENGE, LEVELS, LEVEL_NUMBERS, type LevelNumber } from "@/lib/levels";
 import { SpellhandMark } from "@/components/marks/spellhand-mark";
+import { LocaleToggle } from "@/components/locale-toggle";
 import type { Hand } from "@/lib/hooks/use-hand-preference";
 import { pad2 } from "@/lib/utils";
 import { STAGE_MOTION } from "./stage-motion";
@@ -20,14 +22,19 @@ export function LevelSelectStage({
   hand: Hand;
   onToggleHand: () => void;
 }) {
+  const t = useTranslations("level_select");
   return (
     <motion.main {...STAGE_MOTION} className="flex h-svh flex-col overflow-hidden bg-ink">
       <header className="ruled-b shrink-0">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-2 sm:px-6">
           <SpellhandMark href="/" />
-          <button onClick={onBack} className="caption hover:text-acid">
-            ← Back
-          </button>
+          <div className="flex items-center gap-3 sm:gap-4">
+            <LocaleToggle />
+            <span aria-hidden className="text-bone-3">·</span>
+            <button onClick={onBack} className="caption hover:text-acid">
+              {t("back")}
+            </button>
+          </div>
         </div>
       </header>
 
@@ -46,8 +53,8 @@ export function LevelSelectStage({
                 className="group relative block h-full overflow-hidden bg-ink px-4 py-3 text-left transition-colors hover:bg-ink-2 sm:px-5 sm:py-4"
               >
                 <div className="flex items-start justify-between">
-                  <span className="caption">LEVEL {pad2(n)}</span>
-                  <span className="caption text-bone-3">{lv.words.length} WORDS</span>
+                  <span className="caption">{t("level_label")} {pad2(n)}</span>
+                  <span className="caption text-bone-3">{lv.words.length} {t("words")}</span>
                 </div>
 
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -76,12 +83,12 @@ export function LevelSelectStage({
       >
         <div className="mx-auto flex h-full max-w-6xl items-center justify-between gap-6">
           <div className="flex-1">
-            <p className="caption-acid">§ FINAL · CHALLENGE</p>
+            <p className="caption-acid">{t("challenge_eyebrow")}</p>
             <p className="mt-2 font-[family-name:var(--font-display-loaded)] text-4xl italic leading-[0.95] text-bone transition-colors group-hover:text-acid sm:text-5xl lg:text-6xl">
-              Earn the certificate.
+              {t("challenge_title")}
             </p>
             <p className="mt-3 max-w-md text-xs leading-relaxed text-bone-2 sm:text-sm">
-              {CHALLENGE.pool.length} letters · {CHALLENGE.words.length} words · no reference image. Memory only.
+              {t("challenge_body", { letters: CHALLENGE.pool.length, words: CHALLENGE.words.length })}
             </p>
           </div>
           <div className="hidden shrink-0 sm:block">
@@ -99,7 +106,7 @@ export function LevelSelectStage({
       <div className="shrink-0">
         <div className="mx-auto flex max-w-6xl items-center justify-end px-4 py-3 sm:px-6 sm:py-4">
           <button onClick={onToggleHand} className="caption hover:text-acid">
-            {hand === "right" ? "RIGHT-HANDED" : "LEFT-HANDED"} · CHANGE
+            {hand === "right" ? t("right_handed") : t("left_handed")} · {t("change")}
           </button>
         </div>
       </div>

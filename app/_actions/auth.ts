@@ -1,6 +1,7 @@
 "use server";
 
 import { headers } from "next/headers";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 
 const NAME_MAX = 40;
@@ -18,11 +19,12 @@ export async function sendCertMagicLink(
   email: string,
   displayName: string,
 ): Promise<{ ok: true } | { error: string }> {
+  const t = await getTranslations("errors");
   const cleanName = sanitizeName(displayName);
-  if (!cleanName) return { error: "Please enter your name." };
+  if (!cleanName) return { error: t("name_required") };
 
   const cleanEmail = email.trim().toLowerCase();
-  if (!cleanEmail.includes("@")) return { error: "Please enter a valid email." };
+  if (!cleanEmail.includes("@")) return { error: t("invalid_email") };
 
   const supabase = await createClient();
   const h = await headers();

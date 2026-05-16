@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { useLocale, useTranslations } from "next-intl";
+import { translateHint } from "@/lib/i18n/hints";
+import type { Locale } from "@/lib/i18n/config";
 import { LandmarkOverlay } from "@/components/camera/landmark-overlay";
 import { CameraGate } from "@/components/camera/camera-gate";
 import { GameLeftPanel } from "@/components/reference/game-left-panel";
@@ -36,6 +39,9 @@ export function PlayStage({
   onAllLevels: () => void;
   onFinish: () => void;
 }) {
+  const t = useTranslations("play");
+  const tCamera = useTranslations("camera");
+  const locale = useLocale() as Locale;
   const level = LEVELS[levelNumber];
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -95,32 +101,33 @@ export function PlayStage({
     setSubChecks(result.subChecks ?? null);
     setConfidence(result.confidence);
     if (result.notImplemented) {
-      setHint("Skipping — this letter is on the bench.");
-      const t = setTimeout(advance, 1600);
-      return () => clearTimeout(t);
+      setHint(t("hint_skipping"));
+      const timer = setTimeout(advance, 1600);
+      return () => clearTimeout(timer);
     }
     if (result.match) {
       setHint(null);
       setMatchProgress((p) => Math.min(p + SUSTAIN_PER_SEC * dt, PROGRESS_LOCK));
     } else {
-      setHint(result.hints?.[0]?.message ?? null);
+      const raw = result.hints?.[0]?.message;
+      setHint(raw ? translateHint(raw, locale) : null);
       setMatchProgress((p) => Math.max(p - DECAY_PER_SEC * dt, 0));
     }
-  }, [detection, targetLetter, lastTs, advance, celebrate, complete]);
+  }, [detection, targetLetter, lastTs, advance, celebrate, complete, locale, t]);
 
   useEffect(() => {
     if (detection || status !== "running" || celebrate || complete) return;
     setConfidence(0);
     setSubChecks(null);
     setMatchProgress(0);
-    setHint("Place your hand inside the frame.");
-    const t = setInterval(() => {
-      setHint("Place your hand inside the frame.");
+    setHint(t("hint_place_hand"));
+    const timer = setInterval(() => {
+      setHint(t("hint_place_hand"));
       setConfidence(0);
       setSubChecks(null);
     }, 400);
-    return () => clearInterval(t);
-  }, [detection, status, celebrate, complete]);
+    return () => clearInterval(timer);
+  }, [detection, status, celebrate, complete, t]);
 
   useEffect(() => {
     if (matchProgress >= PROGRESS_LOCK && !celebrate && !complete) advance();
@@ -162,10 +169,10 @@ export function PlayStage({
       <header className="ruled-b sticky top-0 z-30 bg-ink/85 backdrop-blur-sm">
         <div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-4 sm:px-6">
           <button onClick={onBack} className="caption hover:text-acid">
-            ← BACK
+            {t("back")}
           </button>
           <span className="caption">
-            WORD {pad2(wordIndex + 1)} / {pad2(level.words.length)}
+            {t("word_label", { current: pad2(wordIndex + 1), total: pad2(level.words.length) })}
           </span>
           <span className="caption text-bone-3">L{level.number}</span>
         </div>
@@ -203,7 +210,7 @@ export function PlayStage({
             playsInline
             muted
             autoPlay
-            aria-label="Camera viewport"
+            aria-label={tCamera("viewport_label")}
           />
 
           <div
@@ -273,7 +280,7 @@ export function PlayStage({
                   transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                   className="text-center"
                 >
-                  <p className="caption-acid">WORD COMPLETE</p>
+                  <p className="caption-acid">{t("word_complete")}</p>
                   <p className="mt-1 font-[family-name:var(--font-display-loaded)] text-6xl italic text-acid sm:text-7xl">
                     {word}
                   </p>
@@ -306,6 +313,7 @@ function LevelComplete({
   onAllLevels: () => void;
   onFinish: () => void;
 }) {
+  const t = useTranslations("play");
   const accuracy = score.attempted ? Math.round((score.correct / score.attempted) * 100) : 0;
   const isLast = levelNumber >= 4;
 
@@ -314,9 +322,9 @@ function LevelComplete({
       <header className="ruled-b">
         <div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-4 sm:px-6">
           <button onClick={onAllLevels} className="caption hover:text-acid">
-            ← Levels
+            {t("back_to_levels")}
           </button>
-          <span className="caption">LEVEL {pad2(levelNumber)} · COMPLETE</span>
+          <span className="caption">{t("level_complete_header", { n: pad2(levelNumber) })}</span>
           <span aria-hidden></span>
         </div>
       </header>
@@ -328,7 +336,7 @@ function LevelComplete({
           transition={{ duration: 0.4 }}
           className="caption-acid"
         >
-          RESULT
+          {t("result")}
         </motion.p>
         <motion.h1
           initial={{ opacity: 0, y: 16, scale: 0.96 }}
@@ -336,13 +344,13 @@ function LevelComplete({
           transition={{ delay: 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="mt-4 font-[family-name:var(--font-display-loaded)] text-6xl italic leading-[0.95] sm:text-8xl"
         >
-          Well done.
+          {t("well_done")}
         </motion.h1>
 
         <div className="ruled-y mt-12 grid w-full grid-cols-3 divide-x divide-rule">
-          <AnimatedStat label="Words" value={wordCount} delay={0.35} />
-          <AnimatedStat label="Correct" value={score.correct} delay={0.5} />
-          <AnimatedStat label="Accuracy" value={accuracy} suffix="%" delay={0.65} />
+          <AnimatedStat label={t("stat_words")} value={wordCount} delay={0.35} />
+          <AnimatedStat label={t("stat_correct")} value={score.correct} delay={0.5} />
+          <AnimatedStat label={t("stat_accuracy")} value={accuracy} suffix="%" delay={0.65} />
         </div>
 
         <motion.div
@@ -352,25 +360,25 @@ function LevelComplete({
           className="mt-12 flex flex-wrap items-center justify-center gap-3 sm:gap-5"
         >
           <button onClick={onReplay} className="hairline bg-ink px-6 py-3 font-mono text-sm transition-transform hover:-translate-y-px hover:bg-acid hover:text-ink">
-            PLAY AGAIN
+            {t("play_again")}
           </button>
           {isLast ? (
             <button
               onClick={onFinish}
               className="inline-flex items-center gap-3 bg-acid px-6 py-3 font-mono text-sm text-ink transition-transform hover:-translate-y-px"
             >
-              FINISH <span aria-hidden>→</span>
+              {t("finish")} <span aria-hidden>→</span>
             </button>
           ) : (
             <button
               onClick={onNextLevel}
               className="inline-flex items-center gap-3 bg-acid px-6 py-3 font-mono text-sm text-ink transition-transform hover:-translate-y-px"
             >
-              NEXT LEVEL <span aria-hidden>→</span>
+              {t("next_level")} <span aria-hidden>→</span>
             </button>
           )}
           <button onClick={onAllLevels} className="caption hover:text-acid">
-            ← All levels
+            {t("all_levels")}
           </button>
         </motion.div>
       </div>

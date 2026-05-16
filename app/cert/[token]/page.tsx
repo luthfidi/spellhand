@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { CertificateView } from "./certificate-view";
 
@@ -21,12 +22,14 @@ async function fetchCertificate(token: string) {
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { token } = await params;
+  const t = await getTranslations("cert");
   const cert = await fetchCertificate(token);
-  if (!cert) return { title: "Certificate not found" };
+  if (!cert) return { title: t("not_found_title") };
 
   const ogImage = `/cert/${token}/og`;
-  const title = `${cert.display_name} · Spellhand Certificate`;
-  const description = `${cert.display_name} mastered the American Sign Language alphabet on Spellhand.`;
+  const title = t("page_title", { name: cert.display_name });
+  const description = t("page_description", { name: cert.display_name });
+  const altText = t("og_image_alt", { name: cert.display_name });
 
   return {
     title,
@@ -35,7 +38,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       title,
       description,
       type: "website",
-      images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
+      images: [{ url: ogImage, width: 1200, height: 630, alt: altText }],
     },
     twitter: {
       card: "summary_large_image",

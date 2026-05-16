@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { useLocale, useTranslations } from "next-intl";
+import { translateHint } from "@/lib/i18n/hints";
+import type { Locale } from "@/lib/i18n/config";
 import { LandmarkOverlay } from "@/components/camera/landmark-overlay";
 import { CameraGate } from "@/components/camera/camera-gate";
 import { SubCheckPanel } from "@/components/debug/sub-check-panel";
@@ -29,6 +32,9 @@ export function ChallengeStage({
   hand: Hand;
   onBack: () => void;
 }) {
+  const t = useTranslations("challenge");
+  const tCamera = useTranslations("camera");
+  const locale = useLocale() as Locale;
   const videoRef = useRef<HTMLVideoElement>(null);
   const facing: "user" | "environment" = "user";
   const { status, error, detection, start, stop, restart } = useHandLandmarker(videoRef, { facing });
@@ -85,32 +91,33 @@ export function ChallengeStage({
     setSubChecks(result.subChecks ?? null);
     setConfidence(result.confidence);
     if (result.notImplemented) {
-      setHint("Skipping — this letter is on the bench.");
-      const t = setTimeout(advance, 1600);
-      return () => clearTimeout(t);
+      setHint(t("hint_skipping"));
+      const timer = setTimeout(advance, 1600);
+      return () => clearTimeout(timer);
     }
     if (result.match) {
       setHint(null);
       setMatchProgress((p) => Math.min(p + SUSTAIN_PER_SEC * dt, PROGRESS_LOCK));
     } else {
-      setHint(result.hints?.[0]?.message ?? null);
+      const raw = result.hints?.[0]?.message;
+      setHint(raw ? translateHint(raw, locale) : null);
       setMatchProgress((p) => Math.max(p - DECAY_PER_SEC * dt, 0));
     }
-  }, [detection, targetLetter, lastTs, advance, celebrate, complete]);
+  }, [detection, targetLetter, lastTs, advance, celebrate, complete, locale, t]);
 
   useEffect(() => {
     if (detection || status !== "running" || celebrate || complete) return;
     setConfidence(0);
     setSubChecks(null);
     setMatchProgress(0);
-    setHint("Place your hand inside the frame.");
-    const t = setInterval(() => {
-      setHint("Place your hand inside the frame.");
+    setHint(t("hint_place_hand"));
+    const timer = setInterval(() => {
+      setHint(t("hint_place_hand"));
       setConfidence(0);
       setSubChecks(null);
     }, 400);
-    return () => clearInterval(t);
-  }, [detection, status, celebrate, complete]);
+    return () => clearInterval(timer);
+  }, [detection, status, celebrate, complete, t]);
 
   useEffect(() => {
     if (matchProgress >= PROGRESS_LOCK && !celebrate && !complete) advance();
@@ -141,12 +148,12 @@ export function ChallengeStage({
       <header className="ruled-b sticky top-0 z-30 bg-ink/85 backdrop-blur-sm">
         <div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-4 sm:px-6">
           <button onClick={onBack} className="caption hover:text-acid">
-            ← BACK
+            {t("back")}
           </button>
           <span className="caption">
-            WORD {pad2(wordIndex + 1)} / {pad2(CHALLENGE.words.length)}
+            {t("word_label", { current: pad2(wordIndex + 1), total: pad2(CHALLENGE.words.length) })}
           </span>
-          <span className="caption-acid">CHALLENGE</span>
+          <span className="caption-acid">{t("challenge_label")}</span>
         </div>
       </header>
 
@@ -182,7 +189,7 @@ export function ChallengeStage({
             playsInline
             muted
             autoPlay
-            aria-label="Camera viewport"
+            aria-label={tCamera("viewport_label")}
           />
 
           <div
@@ -251,7 +258,7 @@ export function ChallengeStage({
                   transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                   className="text-center"
                 >
-                  <p className="caption-acid">WORD COMPLETE</p>
+                  <p className="caption-acid">{t("word_complete")}</p>
                   <p className="mt-1 font-[family-name:var(--font-display-loaded)] text-6xl italic text-acid sm:text-7xl">
                     {word}
                   </p>
@@ -348,6 +355,8 @@ function CertificateEarned({
   score: { correct: number; attempted: number };
   onReplay: () => void;
 }) {
+  const t = useTranslations("challenge");
+  const tHero = useTranslations("hero");
   const accuracy = score.attempted ? Math.round((score.correct / score.attempted) * 100) : 0;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -355,7 +364,7 @@ function CertificateEarned({
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const display = name.trim() || "— your name —";
+  const display = name.trim() || tHero("cert_name_placeholder");
   const canSubmit = name.trim().length > 0 && email.includes("@") && !sending && !sent;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -372,7 +381,7 @@ function CertificateEarned({
         setSent(true);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to send link.");
+      setError(e instanceof Error ? e.message : t("generic_send_error"));
     } finally {
       setSending(false);
     }
@@ -383,7 +392,7 @@ function CertificateEarned({
       <header className="ruled-b">
         <div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-4 sm:px-6">
           <SpellhandMark href="/" />
-          <span className="caption-acid">CERTIFICATE EARNED</span>
+          <span className="caption-acid">{t("earned_header")}</span>
         </div>
       </header>
 
@@ -394,7 +403,7 @@ function CertificateEarned({
           transition={{ duration: 0.4 }}
           className="caption-acid"
         >
-          CHALLENGE COMPLETE · ACCURACY {accuracy}%
+          {t("earned_eyebrow", { pct: accuracy })}
         </motion.p>
         <motion.h1
           initial={{ opacity: 0, y: 16, scale: 0.96 }}
@@ -402,7 +411,7 @@ function CertificateEarned({
           transition={{ delay: 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="mt-4 font-[family-name:var(--font-display-loaded)] text-5xl italic leading-[0.95] sm:text-7xl"
         >
-          You earned it.
+          {t("earned_title")}
         </motion.h1>
 
         {/* Live preview certificate */}
@@ -417,16 +426,16 @@ function CertificateEarned({
             <span key={c} aria-hidden className={`absolute ${c} h-1.5 w-1.5 bg-acid`} />
           ))}
           <div className="relative flex h-full flex-col items-center justify-center text-center">
-            <p className="caption-acid text-[10px] sm:text-xs">SPELLHAND</p>
+            <p className="caption-acid text-[10px] sm:text-xs">{tHero("cert_brand")}</p>
             <p className="mt-2 font-[family-name:var(--font-display-loaded)] text-2xl italic leading-tight sm:mt-3 sm:text-5xl">
-              Certificate of<br />Fingerspelling
+              {tHero("cert_title_line_1")}<br />{tHero("cert_title_line_2")}
             </p>
-            <p className="caption mt-4 text-bone-3 sm:mt-6">awarded to</p>
+            <p className="caption mt-4 text-bone-3 sm:mt-6">{tHero("cert_awarded")}</p>
             <p className="mt-1 font-[family-name:var(--font-display-loaded)] text-lg italic text-bone sm:text-3xl">
               {display}
             </p>
             <p className="caption mt-4 max-w-xs text-bone-3 sm:mt-6">
-              for mastering the American Sign Language alphabet
+              {tHero("cert_subtitle")}
             </p>
           </div>
         </motion.div>
@@ -440,13 +449,13 @@ function CertificateEarned({
             transition={{ delay: 0.7, duration: 0.5 }}
             className="mt-10 flex w-full max-w-md flex-col items-center gap-3"
           >
-            <p className="caption text-bone-2">Claim your certificate</p>
+            <p className="caption text-bone-2">{t("claim_caption")}</p>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               maxLength={40}
-              placeholder="Your name (e.g. Luthfi)"
+              placeholder={t("name_placeholder")}
               autoComplete="name"
               required
               className="hairline w-full bg-ink px-4 py-3 text-center font-mono text-sm text-bone outline-none placeholder:text-bone-3 focus:border-acid focus:bg-ink-2"
@@ -455,7 +464,7 @@ function CertificateEarned({
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@email.com"
+              placeholder={t("email_placeholder")}
               autoComplete="email"
               required
               className="hairline w-full bg-ink px-4 py-3 text-center font-mono text-sm text-bone outline-none placeholder:text-bone-3 focus:border-acid focus:bg-ink-2"
@@ -468,17 +477,17 @@ function CertificateEarned({
               disabled={!canSubmit}
               className="mt-2 inline-flex w-full items-center justify-center gap-3 bg-acid px-6 py-3 font-mono text-sm text-ink transition-transform hover:-translate-y-px disabled:opacity-50 disabled:hover:translate-y-0"
             >
-              {sending ? "SENDING…" : "CLAIM MY CERTIFICATE →"}
+              {sending ? t("submit_sending") : t("submit_idle")}
             </button>
             <p className="caption mt-2 max-w-xs text-center text-bone-3">
-              We&apos;ll email you a sign-in link. No password needed.
+              {t("no_password_note")}
             </p>
             <button
               type="button"
               onClick={onReplay}
               className="caption mt-4 hover:text-acid"
             >
-              ← play again instead
+              {t("play_again_link")}
             </button>
           </motion.form>
         ) : (
@@ -488,16 +497,16 @@ function CertificateEarned({
             transition={{ duration: 0.5 }}
             className="mt-10 flex w-full max-w-md flex-col items-center gap-3 text-center"
           >
-            <p className="caption-acid">CHECK YOUR INBOX</p>
+            <p className="caption-acid">{t("sent_eyebrow")}</p>
             <p className="font-[family-name:var(--font-display-loaded)] text-3xl italic leading-tight sm:text-4xl">
-              Magic link sent.
+              {t("sent_title")}
             </p>
             <p className="font-mono text-sm leading-relaxed text-bone-2">
-              We sent a sign-in link to <span className="text-bone">{email}</span>.
+              {t("sent_body_prefix")} <span className="text-bone">{email}</span>.
               <br />
-              Click it to claim your certificate.
+              {t("sent_body_suffix")}
             </p>
-            <p className="caption mt-2 text-bone-3">You can close this tab.</p>
+            <p className="caption mt-2 text-bone-3">{t("sent_footnote")}</p>
           </motion.div>
         )}
       </div>

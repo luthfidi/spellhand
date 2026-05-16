@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Instrument_Serif, IBM_Plex_Mono } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { ErrorBoundary } from "@/components/error-boundary";
 import "./globals.css";
 
@@ -19,32 +21,33 @@ const mono = IBM_Plex_Mono({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL("https://spellhand.vercel.app"),
-  title: {
-    default: "Spellhand — A specimen catalogue of the ASL fingerspelling alphabet",
-    template: "%s · Spellhand",
-  },
-  description:
-    "Learn the American Sign Language fingerspelling alphabet with your camera. A specimen-by-specimen field guide, built mobile-first.",
-  keywords: [
-    "ASL",
-    "American Sign Language",
-    "fingerspelling",
-    "alphabet",
-    "learn ASL",
-    "sign language trainer",
-  ],
-  openGraph: {
-    title: "Spellhand",
-    description:
-      "A specimen catalogue of the ASL fingerspelling alphabet. Learn with your camera.",
-    type: "website",
-  },
-  icons: {
-    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("metadata");
+  return {
+    metadataBase: new URL("https://spellhand.vercel.app"),
+    title: {
+      default: t("title_default"),
+      template: t("title_template"),
+    },
+    description: t("description"),
+    keywords: [
+      "ASL",
+      "American Sign Language",
+      "fingerspelling",
+      "alphabet",
+      "learn ASL",
+      "sign language trainer",
+    ],
+    openGraph: {
+      title: t("og_title"),
+      description: t("og_description"),
+      type: "website",
+    },
+    icons: {
+      icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#1a1612",
@@ -55,15 +58,20 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="en" className={`${display.variable} ${mono.variable}`}>
+    <html lang={locale} className={`${display.variable} ${mono.variable}`}>
       <body className="min-h-svh overflow-x-clip antialiased">
-        <ErrorBoundary>{children}</ErrorBoundary>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <ErrorBoundary>{children}</ErrorBoundary>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

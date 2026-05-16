@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import type { DetectorStatus } from "@/lib/mediapipe/use-hand-landmarker";
 
 /**
@@ -16,15 +17,17 @@ export function CameraGate({
   error: string | null;
   onRetry: () => void;
 }) {
+  const t = useTranslations("camera");
+
   if (status === "permission-denied") {
     return (
       <div className="max-w-sm">
-        <p className="caption text-blood">PERMISSION DENIED</p>
+        <p className="caption text-blood">{t("permission_denied_eyebrow")}</p>
         <h2 className="mt-3 font-[family-name:var(--font-display-loaded)] text-3xl italic leading-[0.95]">
-          The instrument needs a camera.
+          {t("permission_denied_title")}
         </h2>
         <p className="mt-3 text-sm text-bone-2">
-          Enable camera access for this site in your browser settings, then refresh.
+          {t("permission_denied_body")}
         </p>
       </div>
     );
@@ -32,23 +35,23 @@ export function CameraGate({
   if (status === "error") {
     return (
       <div className="max-w-sm">
-        <p className="caption text-blood">FAULT</p>
-        <p className="mt-3 text-sm text-bone-2">{error ?? "Camera failed to start."}</p>
+        <p className="caption text-blood">{t("fault_eyebrow")}</p>
+        <p className="mt-3 text-sm text-bone-2">{error ?? t("fault_default")}</p>
         <button
           onClick={onRetry}
           className="mt-5 inline-flex items-center gap-3 bg-acid px-5 py-3 font-mono text-sm text-ink"
         >
-          RETRY <span aria-hidden>→</span>
+          {t("retry")} <span aria-hidden>→</span>
         </button>
       </div>
     );
   }
   const label =
     status === "requesting-camera"
-      ? "Awaiting camera permission…"
+      ? t("status_requesting")
       : status === "loading-model"
-        ? "Loading model…"
-        : "Starting…";
+        ? t("status_loading_model")
+        : t("status_starting");
   return (
     <div className="flex flex-col items-center gap-3">
       <p className="caption-acid">{label.toUpperCase()}</p>

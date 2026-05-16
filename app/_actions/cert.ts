@@ -1,5 +1,6 @@
 "use server";
 
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 
 const NAME_MAX = 40;
@@ -16,8 +17,9 @@ function sanitizeName(raw: string): string {
 export async function issueCertificate(
   displayName: string,
 ): Promise<{ share_token: string } | { error: string }> {
+  const t = await getTranslations("errors");
   const cleanName = sanitizeName(displayName);
-  if (!cleanName) return { error: "Display name is required." };
+  if (!cleanName) return { error: t("display_name_required") };
 
   const supabase = await createClient();
   const {
@@ -26,7 +28,7 @@ export async function issueCertificate(
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { error: "Not authenticated." };
+    return { error: t("not_authenticated") };
   }
 
   const { data, error } = await supabase

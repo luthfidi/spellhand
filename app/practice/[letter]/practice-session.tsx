@@ -1,8 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
+import { useLocale, useTranslations } from "next-intl";
+import { translateHint } from "@/lib/i18n/hints";
+import type { Locale } from "@/lib/i18n/config";
 import { LandmarkOverlay } from "@/components/camera/landmark-overlay";
 import { CameraGate } from "@/components/camera/camera-gate";
 import { ConfidenceDisplay } from "@/components/feedback/confidence-display";
@@ -22,6 +25,9 @@ const NEEDS_PERSPECTIVE_NOTE = new Set<LetterCode>(["G", "H", "P", "Q"]);
 const ROTATED_LETTERS = new Map<LetterCode, number>();
 
 export function PracticeSession({ meta }: { meta: LetterMeta }) {
+  const t = useTranslations("practice");
+  const tCamera = useTranslations("camera");
+  const locale = useLocale() as Locale;
   const videoRef = useRef<HTMLVideoElement>(null);
   const [facing] = useState<"user" | "environment">("user");
   const { hand: storedHand, setHand } = useHandPreference();
@@ -44,9 +50,13 @@ export function PracticeSession({ meta }: { meta: LetterMeta }) {
     const { result } = classifyAgainstTarget(detection, meta.code);
     setConfidence(result.confidence);
     setSubChecks(result.subChecks ?? null);
-    if (result.match) setHint(null);
-    else setHint(result.hints?.[0]?.message ?? null);
-  }, [detection, meta.code]);
+    if (result.match) {
+      setHint(null);
+    } else {
+      const raw = result.hints?.[0]?.message;
+      setHint(raw ? translateHint(raw, locale) : null);
+    }
+  }, [detection, meta.code, locale]);
 
   // Reset when target letter changes (user clicked an arrow).
   useEffect(() => {
@@ -60,14 +70,14 @@ export function PracticeSession({ meta }: { meta: LetterMeta }) {
     if (detection || status !== "running") return;
     setConfidence(0);
     setSubChecks(null);
-    setHint("Place your hand inside the frame.");
-    const t = setInterval(() => {
-      setHint("Place your hand inside the frame.");
+    setHint(t("hint_place_hand"));
+    const timer = setInterval(() => {
+      setHint(t("hint_place_hand"));
       setConfidence(0);
       setSubChecks(null);
     }, 400);
-    return () => clearInterval(t);
-  }, [detection, status]);
+    return () => clearInterval(timer);
+  }, [detection, status, t]);
 
   const mirrored = facing === "user";
   const flipReference = mirrored && hand === "right";
@@ -85,18 +95,18 @@ export function PracticeSession({ meta }: { meta: LetterMeta }) {
         <div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-4 sm:px-6">
           <SpellhandMark href="/" />
           <span className="caption">
-            § {pad2(meta.index)} / 24 · {meta.nato.toUpperCase()}
+            {t("header_count", { index: pad2(meta.index), nato: meta.nato.toUpperCase() })}
           </span>
           <div className="flex items-center gap-3 sm:gap-5">
             <button
               onClick={() => setHand(hand === "right" ? "left" : "right")}
               className="caption hover:text-acid"
-              aria-label="Toggle dominant hand"
+              aria-label={t("toggle_hand_label")}
             >
-              {hand === "right" ? "RIGHT HANDED" : "LEFT HANDED"}
+              {hand === "right" ? t("right_handed") : t("left_handed")}
             </button>
             <Link href="/" className="caption hover:text-acid">
-              END
+              {t("end")}
             </Link>
           </div>
         </div>
@@ -131,7 +141,7 @@ export function PracticeSession({ meta }: { meta: LetterMeta }) {
             playsInline
             muted
             autoPlay
-            aria-label="Camera viewport"
+            aria-label={tCamera("viewport_label")}
           />
 
           <div
@@ -191,13 +201,15 @@ export function PracticeSession({ meta }: { meta: LetterMeta }) {
         side="left"
         href={`/practice/${prev.code.toLowerCase()}`}
         letter={prev.code}
-        label="PREV"
+        label={t("prev")}
+        ariaLabel={t("go_to_letter_label", { letter: prev.code })}
       />
       <EdgeArrow
         side="right"
         href={`/practice/${next.code.toLowerCase()}`}
         letter={next.code}
-        label="NEXT"
+        label={t("next")}
+        ariaLabel={t("go_to_letter_label", { letter: next.code })}
       />
     </main>
   );
@@ -225,11 +237,7 @@ function PracticeReferencePanel({
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               className="flex max-h-full max-w-full flex-col items-center gap-2 sm:gap-3"
             >
-              {NEEDS_PERSPECTIVE_NOTE.has(letter) ? (
-                <p className="caption-acid whitespace-nowrap text-center text-sm tracking-[0.14em] sm:text-base">
-                  PALM FACES AWAY FROM CAMERA
-                </p>
-              ) : null}
+              {NEEDS_PERSPECTIVE_NOTE.has(letter) ? <PalmAwayNote /> : null}
               <div className="flex min-h-0 w-full flex-1 items-center justify-center">
                 <LetterImage letter={letter} mirror={mirror} />
               </div>
@@ -259,7 +267,17 @@ function PracticeReferencePanel({
   );
 }
 
+function PalmAwayNote() {
+  const t = useTranslations("practice");
+  return (
+    <p className="caption-acid whitespace-nowrap text-center text-sm tracking-[0.14em] sm:text-base">
+      {t("palm_away_note")}
+    </p>
+  );
+}
+
 function LetterImage({ letter, mirror }: { letter: LetterCode; mirror: boolean }) {
+  const t = useTranslations("practice");
   const [errored, setErrored] = useState(false);
   const effectiveMirror = INVERTED_LETTERS.has(letter) ? !mirror : mirror;
   const rotation = ROTATED_LETTERS.get(letter) ?? 0;
@@ -281,7 +299,7 @@ function LetterImage({ letter, mirror }: { letter: LetterCode; mirror: boolean }
   return (
     <img
       src={`/letters/asl/${letter.toLowerCase()}.svg`}
-      alt={`Hand shape for the letter ${letter}`}
+      alt={t("letter_alt", { letter })}
       onError={() => setErrored(true)}
       className={cn(
         "max-h-full max-w-full object-contain",
@@ -301,11 +319,13 @@ function EdgeArrow({
   href,
   letter,
   label,
+  ariaLabel,
 }: {
   side: "left" | "right";
   href: string;
   letter: string;
   label: string;
+  ariaLabel: string;
 }) {
   const initialX = side === "left" ? -40 : 40;
 
@@ -323,7 +343,7 @@ function EdgeArrow({
       <Link
         href={href}
         className="group hairline flex flex-col items-center gap-1 bg-acid px-3 py-5 text-ink shadow-xl transition-transform hover:scale-105 sm:px-5 sm:py-7"
-        aria-label={`Go to letter ${letter}`}
+        aria-label={ariaLabel}
       >
         <span className="font-mono text-[10px] tracking-[0.15em] sm:text-xs">{label}</span>
         <span className="font-[family-name:var(--font-display-loaded)] text-4xl italic leading-none sm:text-6xl">
