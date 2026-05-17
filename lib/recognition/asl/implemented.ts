@@ -119,17 +119,19 @@ export function ruleD(input: ClassifyInput): RuleResult {
 
 /* ────────────────── E ──────────────────
  * All four fingertips curl down to meet the thumb. Compact.
+ * Loosened thresholds for mobile cameras (slight perspective distortion
+ * inflates tip-to-thumb distance even when normalised).
  */
 export function ruleE(input: ClassifyInput): RuleResult {
   const { landmarks } = input;
   const tipsClose = (["index", "middle", "ring", "pinky"] as const).every(
-    (f) => tipDistance(landmarks, f, "thumb") < 0.30,
+    (f) => tipDistance(landmarks, f, "thumb") < 0.42,
   );
   return aggregate("E", [
-    checkCurled(landmarks, "index", 130),
-    checkCurled(landmarks, "middle", 130),
-    checkCurled(landmarks, "ring", 130),
-    checkCurled(landmarks, "pinky", 130),
+    checkCurled(landmarks, "index", 140),
+    checkCurled(landmarks, "middle", 140),
+    checkCurled(landmarks, "ring", 140),
+    checkCurled(landmarks, "pinky", 140),
     check("All four tips press against thumb", tipsClose, THUMB_LM, THUMB_CON),
   ]);
 }
