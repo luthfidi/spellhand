@@ -147,7 +147,9 @@ function LetterImage({ letter, mirror }: { letter: LetterCode; mirror?: boolean 
       alt={`Hand shape for the letter ${letter}`}
       onError={() => setErrored(true)}
       className={cn(
-        "max-h-full max-w-full object-contain",
+        // Mobile: cap to viewport-relative size so it scales with phone height.
+        // Desktop / tablet: fill container.
+        "max-h-[22vh] max-w-[55vw] object-contain sm:max-h-full sm:max-w-full",
         "[filter:invert(0.97)_sepia(0.08)_saturate(0.4)]",
         "[width:auto] [height:auto]",
       )}

@@ -13,7 +13,13 @@ export type DetectorStatus =
   | "error";
 
 export interface Detection {
-  landmarks: Landmark[]; // 21 points
+  landmarks: Landmark[]; // 21 points, raw — used by the overlay (image-normalised)
+  /**
+   * Same 21 points with `x` and `z` scaled by image aspect ratio (w/h) so that
+   * x and y end up in the same coordinate basis. Distance ratios computed on
+   * these are aspect-invariant — use these for classifier rules.
+   */
+  scaledLandmarks: Landmark[];
   handedness: Handedness;
   timestamp: number;
 }
@@ -108,7 +114,17 @@ export function useHandLandmarker(
       video.srcObject = stream;
       video.playsInline = true;
       video.muted = true;
-      await video.play();
+      // Autoplay can be blocked on mobile even with muted + playsInline if the
+      // user-gesture window has expired during model load. Catch & continue —
+      // the <video autoPlay> attribute + the detection loop's videoWidth check
+      // will pick things up once the user next interacts with the page.
+      try {
+        await video.play();
+      } catch (playError) {
+        if (process.env.NODE_ENV !== "production") {
+          console.warn("video.play() blocked; will retry on next interaction:", playError);
+        }
+      }
 
       setStatus("ready");
 
@@ -138,8 +154,18 @@ export function useHandLandmarker(
           const lm = result?.landmarks?.[0];
           const hd = result?.handedness?.[0]?.[0];
           if (lm && hd) {
+            // Aspect-corrected copy: scale x and z (z is in same basis as x
+            // per MediaPipe spec) by w/h so x and y share the same coordinate
+            // basis. Distance ratios on these landmarks are aspect-invariant.
+            const aspect = (video.videoWidth || 1) / (video.videoHeight || 1);
+            const scaled = (lm as Landmark[]).map((p) => ({
+              x: p.x * aspect,
+              y: p.y,
+              z: p.z * aspect,
+            }));
             setDetection({
               landmarks: lm as Landmark[],
+              scaledLandmarks: scaled,
               handedness: (hd.categoryName as Handedness) ?? "Right",
               timestamp: now,
             });
@@ -179,6 +205,26 @@ export function useHandLandmarker(
     document.addEventListener("visibilitychange", onVisibility);
     return () => document.removeEventListener("visibilitychange", onVisibility);
   }, []);
+
+  // Retry video.play() on any user interaction. Mobile browsers sometimes block
+  // autoplay even with muted + playsInline if the original gesture window
+  // expired during model loading. Once user taps anywhere, this catches up.
+  useEffect(() => {
+    const retry = () => {
+      const v = videoRef.current;
+      if (v && v.srcObject && v.paused) {
+        v.play().catch(() => {
+          // Still blocked — wait for next interaction.
+        });
+      }
+    };
+    document.addEventListener("pointerdown", retry, { passive: true });
+    document.addEventListener("touchstart", retry, { passive: true });
+    return () => {
+      document.removeEventListener("pointerdown", retry);
+      document.removeEventListener("touchstart", retry);
+    };
+  }, [videoRef]);
 
   // Cleanup on unmount.
   useEffect(() => {
