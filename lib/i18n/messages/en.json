@@ -67,7 +67,7 @@
     "1_blurb": "Get ready to learn the letters A, B, C, E, L, O, V, W, U, Y.",
     "2_blurb": "We add the letters D, F, I, K, R, S, T to your vocabulary.",
     "3_blurb": "Ready for more, this time G, H, M, N, X.",
-    "4_blurb": "Two letters where you turn your hand downward, P and Q. (J and Z need motion and arrive in a future edition.)"
+    "4_blurb": "Four advanced letters: P and Q (turn your hand downward), plus J and Z (traced in the air with motion)."
   },
   "play": {
     "back": "← BACK",
@@ -112,7 +112,7 @@
     "generic_send_error": "Failed to send link."
   },
   "practice": {
-    "header_count": "§ {index} / 24 · {nato}",
+    "header_count": "§ {index} / 26 · {nato}",
     "right_handed": "RIGHT HANDED",
     "left_handed": "LEFT HANDED",
     "toggle_hand_label": "Toggle dominant hand",
@@ -122,7 +122,12 @@
     "palm_away_note": "PALM FACES AWAY FROM CAMERA",
     "hint_place_hand": "Place your hand inside the frame.",
     "letter_alt": "Hand shape for the letter {letter}",
-    "go_to_letter_label": "Go to letter {letter}"
+    "go_to_letter_label": "Go to letter {letter}",
+    "motion_start_from": "Start from {letter}",
+    "motion_hold_start_pose": "Hold the start pose",
+    "motion_recording": "Trace now",
+    "motion_success": "Got it!",
+    "motion_try_again": "Try again"
   },
   "claim": {
     "header": "CLAIM",

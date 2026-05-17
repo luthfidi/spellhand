@@ -8,9 +8,24 @@ export interface Landmark {
 
 export type Handedness = "Left" | "Right";
 
+export interface MotionPoint {
+  x: number; // MediaPipe normalised coords (unmirrored frame)
+  y: number;
+  t: number; // ms timestamp
+}
+
+export type MotionPath = readonly MotionPoint[];
+
 export interface ClassifyInput {
   landmarks: Landmark[]; // 21 points
   handedness: Handedness;
+  /**
+   * Recorded fingertip trajectory for dynamic letters (J, Z). Static rules
+   * ignore this; dynamic rules require it. The path is in MediaPipe
+   * normalised coords (unmirrored), captured over a short time window
+   * after the user locked the start pose.
+   */
+  motion?: MotionPath;
 }
 
 export type HintKind = "orientation" | "fingers" | "position";

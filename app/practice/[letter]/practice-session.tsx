@@ -16,9 +16,16 @@ import { useHandLandmarker } from "@/lib/mediapipe/use-hand-landmarker";
 import { useHandPreference } from "@/lib/hooks/use-hand-preference";
 import { classifyAgainstTarget } from "@/lib/recognition/classify";
 import { LETTERS, type LetterCode, type LetterMeta } from "@/lib/letters";
-import type { SubCheck } from "@/lib/recognition/types";
+import type { ClassifyInput, SubCheck } from "@/lib/recognition/types";
+import { MotionBuffer } from "@/lib/recognition/motion";
 import { SubCheckPanel } from "@/components/debug/sub-check-panel";
 import { cn, pad2 } from "@/lib/utils";
+
+const POSE_LOCK_MS = 400;        // hold start pose this long to begin recording
+const RECORD_MS = 1200;          // capture the trace for this long
+const DONE_HOLD_MS = 1400;       // show success/fail result before resetting
+
+type MotionPhase = "waiting" | "recording" | "done";
 
 const INVERTED_LETTERS = new Set<LetterCode>(["G", "H", "P", "Q"]);
 const NEEDS_PERSPECTIVE_NOTE = new Set<LetterCode>(["G", "H", "P", "Q"]);
@@ -38,6 +45,14 @@ export function PracticeSession({ meta }: { meta: LetterMeta }) {
   const [hint, setHint] = useState<string | null>(null);
   const [subChecks, setSubChecks] = useState<SubCheck[] | null>(null);
 
+  // Motion-mode state (used only when meta.dynamic).
+  const isDynamic = meta.dynamic === true;
+  const [motionPhase, setMotionPhase] = useState<MotionPhase>("waiting");
+  const [motionOK, setMotionOK] = useState<boolean | null>(null);
+  const bufferRef = useRef<MotionBuffer>(new MotionBuffer(RECORD_MS + 200));
+  const poseLockStartRef = useRef<number>(0);
+  const recordStartRef = useRef<number>(0);
+
   // Auto-start camera on mount.
   useEffect(() => {
     start();
@@ -45,8 +60,9 @@ export function PracticeSession({ meta }: { meta: LetterMeta }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ─────────── Static-letter classifier (existing flow) ───────────
   useEffect(() => {
-    if (!detection) return;
+    if (!detection || isDynamic) return;
     const { result } = classifyAgainstTarget(detection, meta.code);
     setConfidence(result.confidence);
     setSubChecks(result.subChecks ?? null);
@@ -56,18 +72,89 @@ export function PracticeSession({ meta }: { meta: LetterMeta }) {
       const raw = result.hints?.[0]?.message;
       setHint(raw ? translateHint(raw, locale) : null);
     }
-  }, [detection, meta.code, locale]);
+  }, [detection, meta.code, isDynamic, locale]);
+
+  // ─────────── Dynamic-letter motion state machine (J, Z) ───────────
+  useEffect(() => {
+    if (!detection || !isDynamic) return;
+    const startPoseCode = meta.startPose;
+    const motionTipIdx = meta.motionTip;
+    if (!startPoseCode || motionTipIdx == null) return;
+
+    const now = detection.timestamp;
+    const tip = detection.landmarks[motionTipIdx];
+
+    if (motionPhase === "waiting") {
+      // Detect the start pose. Once held for POSE_LOCK_MS, switch to recording.
+      const { result } = classifyAgainstTarget(detection, startPoseCode);
+      setConfidence(result.confidence);
+      setSubChecks(result.subChecks ?? null);
+      if (result.match) {
+        if (poseLockStartRef.current === 0) {
+          poseLockStartRef.current = now;
+        } else if (now - poseLockStartRef.current >= POSE_LOCK_MS) {
+          bufferRef.current.clear();
+          bufferRef.current.add(tip.x, tip.y, now);
+          recordStartRef.current = now;
+          poseLockStartRef.current = 0;
+          setMotionPhase("recording");
+          setHint(null);
+        }
+      } else {
+        poseLockStartRef.current = 0;
+        const raw = result.hints?.[0]?.message;
+        setHint(raw ? translateHint(raw, locale) : null);
+      }
+      return;
+    }
+
+    if (motionPhase === "recording") {
+      bufferRef.current.add(tip.x, tip.y, now);
+      const elapsed = now - recordStartRef.current;
+      setConfidence(Math.min(elapsed / RECORD_MS, 1));
+      if (elapsed >= RECORD_MS) {
+        const motionInput: ClassifyInput = { ...detection, motion: bufferRef.current.snapshot() };
+        const { result } = classifyAgainstTarget(motionInput, meta.code);
+        setSubChecks(result.subChecks ?? null);
+        setConfidence(result.confidence);
+        setMotionOK(result.match);
+        const raw = result.hints?.[0]?.message;
+        setHint(raw ? translateHint(raw, locale) : null);
+        setMotionPhase("done");
+      }
+    }
+  }, [detection, motionPhase, isDynamic, meta.code, meta.startPose, meta.motionTip, locale]);
+
+  // Auto-reset motion state after the done-phase hold elapses.
+  useEffect(() => {
+    if (motionPhase !== "done") return;
+    const timer = setTimeout(() => {
+      setMotionPhase("waiting");
+      setMotionOK(null);
+      setConfidence(0);
+      setSubChecks(null);
+      setHint(null);
+      bufferRef.current.clear();
+    }, DONE_HOLD_MS);
+    return () => clearTimeout(timer);
+  }, [motionPhase]);
 
   // Reset when target letter changes (user clicked an arrow).
   useEffect(() => {
     setConfidence(0);
     setSubChecks(null);
     setHint(null);
+    setMotionPhase("waiting");
+    setMotionOK(null);
+    poseLockStartRef.current = 0;
+    bufferRef.current.clear();
   }, [meta.code]);
 
-  // Reset when hand leaves frame.
+  // Reset when hand leaves frame. Don't override the "done" overlay for
+  // dynamic letters — the user is just looking at the result.
   useEffect(() => {
     if (detection || status !== "running") return;
+    if (isDynamic && motionPhase === "done") return;
     setConfidence(0);
     setSubChecks(null);
     setHint(t("hint_place_hand"));
@@ -77,7 +164,7 @@ export function PracticeSession({ meta }: { meta: LetterMeta }) {
       setSubChecks(null);
     }, 400);
     return () => clearInterval(timer);
-  }, [detection, status, t]);
+  }, [detection, status, t, isDynamic, motionPhase]);
 
   const mirrored = facing === "user";
   const flipReference = mirrored && hand === "right";
@@ -121,7 +208,7 @@ export function PracticeSession({ meta }: { meta: LetterMeta }) {
             hand === "right" ? "lg:order-1 lg:border-r" : "lg:order-2 lg:border-l",
           )}
         >
-          <PracticeReferencePanel letter={meta.code} mirror={flipReference} />
+          <PracticeReferencePanel meta={meta} mirror={flipReference} />
         </div>
 
         {/* Camera */}
@@ -167,7 +254,11 @@ export function PracticeSession({ meta }: { meta: LetterMeta }) {
             </div>
           ) : null}
 
-          <LockedRing active={running && confidence >= 0.999} />
+          {running && isDynamic ? (
+            <MotionPhaseBadge phase={motionPhase} ok={motionOK} />
+          ) : null}
+
+          <LockedRing active={running && !isDynamic && confidence >= 0.999} />
 
           <div className="pointer-events-none absolute inset-x-0 bottom-5 z-20 flex justify-center px-6">
             <AnimatePresence mode="wait">
@@ -218,28 +309,35 @@ export function PracticeSession({ meta }: { meta: LetterMeta }) {
 /* ────────────── Reference (hand + letter, no word/chrome) ────────────── */
 
 function PracticeReferencePanel({
-  letter,
+  meta,
   mirror,
 }: {
-  letter: LetterCode;
+  meta: LetterMeta;
   mirror: boolean;
 }) {
+  const t = useTranslations("practice");
+  const referenceLetter: LetterCode = meta.dynamic && meta.startPose ? meta.startPose : meta.code;
   return (
     <div className="relative flex h-full w-full bg-ink-2">
       <div className="flex flex-1 items-center justify-center gap-1 overflow-hidden px-2 py-2 sm:gap-2 sm:px-3 sm:py-3">
         <div className="relative flex h-full flex-[2.2] items-center justify-center">
           <AnimatePresence mode="wait">
             <motion.div
-              key={letter}
+              key={meta.code}
               initial={{ opacity: 0, scale: 0.97 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.99 }}
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               className="flex max-h-full max-w-full flex-col items-center gap-2 sm:gap-3"
             >
-              {NEEDS_PERSPECTIVE_NOTE.has(letter) ? <PalmAwayNote /> : null}
+              {NEEDS_PERSPECTIVE_NOTE.has(meta.code) ? <PalmAwayNote /> : null}
+              {meta.dynamic ? (
+                <p className="caption-acid whitespace-nowrap text-center text-[11px] tracking-[0.14em] sm:text-xs">
+                  {t("motion_start_from", { letter: referenceLetter })}
+                </p>
+              ) : null}
               <div className="flex min-h-0 w-full flex-1 items-center justify-center">
-                <LetterImage letter={letter} mirror={mirror} />
+                <LetterImage letter={referenceLetter} mirror={mirror} />
               </div>
             </motion.div>
           </AnimatePresence>
@@ -248,14 +346,14 @@ function PracticeReferencePanel({
         <div className="flex flex-1 items-center justify-center">
           <AnimatePresence mode="wait">
             <motion.div
-              key={letter}
+              key={meta.code}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.3 }}
             >
               <LetterGlyph
-                letter={letter}
+                letter={meta.code}
                 size="xl"
                 className="text-[20vw] leading-none text-bone sm:text-[15vw] lg:text-[12vw] xl:text-[12rem]"
               />
@@ -273,6 +371,41 @@ function PalmAwayNote() {
     <p className="caption-acid whitespace-nowrap text-center text-sm tracking-[0.14em] sm:text-base">
       {t("palm_away_note")}
     </p>
+  );
+}
+
+function MotionPhaseBadge({ phase, ok }: { phase: MotionPhase; ok: boolean | null }) {
+  const t = useTranslations("practice");
+  let label: string;
+  let className: string;
+  if (phase === "recording") {
+    label = t("motion_recording");
+    className = "bg-acid text-ink";
+  } else if (phase === "done") {
+    label = ok ? t("motion_success") : t("motion_try_again");
+    className = ok ? "bg-acid text-ink" : "bg-blood text-bone";
+  } else {
+    label = t("motion_hold_start_pose");
+    className = "bg-ink/75 text-bone hairline";
+  }
+  return (
+    <div className="pointer-events-none absolute left-5 top-4 z-20">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={label}
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 6 }}
+          transition={{ duration: 0.2 }}
+          className={cn(
+            "rounded-full px-3 py-1.5 font-mono text-xs tracking-[0.06em] backdrop-blur-sm sm:px-4 sm:py-2 sm:text-sm",
+            className,
+          )}
+        >
+          {label}
+        </motion.div>
+      </AnimatePresence>
+    </div>
   );
 }
 

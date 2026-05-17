@@ -14,8 +14,9 @@ import { LockedRing } from "@/components/feedback/locked-ring";
 import { useHandLandmarker } from "@/lib/mediapipe/use-hand-landmarker";
 import { classifyAgainstTarget } from "@/lib/recognition/classify";
 import { LEVELS, type LevelNumber } from "@/lib/levels";
-import type { LetterCode } from "@/lib/letters";
-import type { SubCheck } from "@/lib/recognition/types";
+import { LETTER_BY_CODE, type LetterCode } from "@/lib/letters";
+import { MotionBuffer } from "@/lib/recognition/motion";
+import type { ClassifyInput, SubCheck } from "@/lib/recognition/types";
 import type { Hand } from "@/lib/hooks/use-hand-preference";
 import { cn, pad2 } from "@/lib/utils";
 import { STAGE_MOTION } from "./stage-motion";
@@ -23,6 +24,11 @@ import { STAGE_MOTION } from "./stage-motion";
 const SUSTAIN_PER_SEC = 1.7;
 const DECAY_PER_SEC = 0.6;
 const PROGRESS_LOCK = 1.0;
+
+const POSE_LOCK_MS = 400;
+const RECORD_MS = 1200;
+
+type MotionPhase = "waiting" | "recording" | "done";
 
 export function PlayStage({
   levelNumber,
@@ -59,8 +65,16 @@ export function PlayStage({
   const [subChecks, setSubChecks] = useState<SubCheck[] | null>(null);
   const [confidence, setConfidence] = useState(0);
 
+  // Motion-mode state for dynamic letters (J, Z).
+  const [motionPhase, setMotionPhase] = useState<MotionPhase>("waiting");
+  const bufferRef = useRef<MotionBuffer>(new MotionBuffer(RECORD_MS + 200));
+  const poseLockStartRef = useRef(0);
+  const recordStartRef = useRef(0);
+
   const word = level.words[wordIndex];
   const targetLetter = (word?.[letterIndex] ?? "A") as LetterCode;
+  const targetMeta = LETTER_BY_CODE[targetLetter];
+  const isDynamicTarget = targetMeta?.dynamic === true;
 
   // Auto-start camera on mount (no extra "START" gate).
   useEffect(() => {
@@ -95,6 +109,66 @@ export function PlayStage({
   useEffect(() => {
     if (!detection || celebrate || complete) return;
     const now = detection.timestamp;
+
+    // Dynamic letters (J, Z): start-pose lock → record trace → classify → advance/reset.
+    if (isDynamicTarget && targetMeta?.startPose && targetMeta.motionTip != null) {
+      const tip = detection.landmarks[targetMeta.motionTip];
+
+      if (motionPhase === "waiting") {
+        const { result } = classifyAgainstTarget(detection, targetMeta.startPose);
+        setSubChecks(result.subChecks ?? null);
+        setConfidence(result.confidence);
+        if (result.match) {
+          if (poseLockStartRef.current === 0) {
+            poseLockStartRef.current = now;
+          } else if (now - poseLockStartRef.current >= POSE_LOCK_MS) {
+            bufferRef.current.clear();
+            bufferRef.current.add(tip.x, tip.y, now);
+            recordStartRef.current = now;
+            poseLockStartRef.current = 0;
+            setMotionPhase("recording");
+            setHint(null);
+          }
+        } else {
+          poseLockStartRef.current = 0;
+          const raw = result.hints?.[0]?.message;
+          setHint(raw ? translateHint(raw, locale) : null);
+        }
+        return;
+      }
+
+      if (motionPhase === "recording") {
+        bufferRef.current.add(tip.x, tip.y, now);
+        const elapsed = now - recordStartRef.current;
+        setConfidence(Math.min(elapsed / RECORD_MS, 1));
+        if (elapsed >= RECORD_MS) {
+          const motionInput: ClassifyInput = { ...detection, motion: bufferRef.current.snapshot() };
+          const { result } = classifyAgainstTarget(motionInput, targetLetter);
+          setSubChecks(result.subChecks ?? null);
+          setConfidence(result.confidence);
+          if (result.match) {
+            // Brief done flash, then advance.
+            setMotionPhase("done");
+            const timer = setTimeout(advance, 350);
+            return () => clearTimeout(timer);
+          }
+          // Fail — show hint, reset to waiting for retry.
+          const raw = result.hints?.[0]?.message;
+          setHint(raw ? translateHint(raw, locale) : null);
+          setMotionPhase("done");
+          const timer = setTimeout(() => {
+            setMotionPhase("waiting");
+            setConfidence(0);
+            setSubChecks(null);
+            bufferRef.current.clear();
+          }, 1200);
+          return () => clearTimeout(timer);
+        }
+      }
+      return;
+    }
+
+    // Static letters: classic per-frame fill.
     const dt = lastTs == null ? 0.04 : Math.min((now - lastTs) / 1000, 0.2);
     setLastTs(now);
     const { result } = classifyAgainstTarget(detection, targetLetter);
@@ -113,7 +187,14 @@ export function PlayStage({
       setHint(raw ? translateHint(raw, locale) : null);
       setMatchProgress((p) => Math.max(p - DECAY_PER_SEC * dt, 0));
     }
-  }, [detection, targetLetter, lastTs, advance, celebrate, complete, locale, t]);
+  }, [detection, targetLetter, lastTs, advance, celebrate, complete, locale, t, isDynamicTarget, targetMeta, motionPhase]);
+
+  // Reset motion state whenever the target letter changes.
+  useEffect(() => {
+    setMotionPhase("waiting");
+    poseLockStartRef.current = 0;
+    bufferRef.current.clear();
+  }, [targetLetter]);
 
   useEffect(() => {
     if (detection || status !== "running" || celebrate || complete) return;

@@ -25,6 +25,18 @@ const STATES_ID: Record<string, string> = {
 };
 
 const STATIC_ID: Record<string, string> = {
+  // J / Z motion classifier
+  "Trace the J shape": "Lacak bentuk J",
+  "Trace the Z shape": "Lacak bentuk Z",
+  "Trace a bigger J": "Lacak J yang lebih besar",
+  "Trace a bigger Z": "Lacak Z yang lebih besar",
+  "Pinky drops down": "Kelingking turun ke bawah",
+  "Pinky hooks at the bottom": "Kelingking menghook di bawah",
+  "Trace is tall enough": "Lacakan cukup tinggi",
+  "Top stroke goes right": "Stroke atas ke kanan",
+  "Diagonal goes down-left": "Diagonal turun ke kiri",
+  "Bottom stroke goes right": "Stroke bawah ke kanan",
+  // Static letters
   "All four tips press against thumb": "Empat ujung jari menempel ke ibu jari",
   "Hand horizontal": "Tangan horizontal",
   "Hand inverted (index points down)": "Tangan terbalik (telunjuk ke bawah)",

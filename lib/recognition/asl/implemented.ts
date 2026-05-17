@@ -24,7 +24,8 @@ import {
   pipAngle,
   tipDistance,
 } from "../helpers";
-import type { ClassifyInput, RuleResult } from "../types";
+import { classifyJMotion, classifyZMotion, type MotionResult } from "../motion";
+import type { ClassifyInput, RuleResult, SubCheck } from "../types";
 
 const THUMB_LM = FINGER_LANDMARKS.thumb;
 const THUMB_CON = FINGER_CONNECTIONS.thumb;
@@ -496,4 +497,57 @@ export function ruleY(input: ClassifyInput): RuleResult {
     checkCurled(landmarks, "middle"),
     checkCurled(landmarks, "ring"),
   ]);
+}
+
+/* ───────────── Dynamic letters (J, Z) ─────────────
+ * These need a traced motion, not a still pose. The classifier runs against
+ * `input.motion` — a path of fingertip positions captured after the user
+ * locked the start pose (I shape for J, point-up for Z).
+ *
+ * When no motion is supplied yet, the rule returns `match: false` with the
+ * "trace …" hint so the UI can prompt the user.
+ */
+function adaptMotion(letter: "J" | "Z", motion: MotionResult): RuleResult {
+  const subChecks: SubCheck[] = motion.checks.map((c) => ({
+    label: c.label,
+    satisfied: c.satisfied,
+    landmarks: [],
+    connections: [],
+  }));
+  return {
+    letter,
+    match: motion.match,
+    confidence: motion.confidence,
+    subChecks,
+    hints: motion.checks
+      .filter((c) => !c.satisfied)
+      .slice(0, 2)
+      .map((c) => ({ kind: "fingers" as const, message: c.label })),
+  };
+}
+
+export function ruleJ(input: ClassifyInput): RuleResult {
+  if (!input.motion || input.motion.length === 0) {
+    return {
+      letter: "J",
+      match: false,
+      confidence: 0,
+      subChecks: [],
+      hints: [{ kind: "fingers", message: "Trace the J shape" }],
+    };
+  }
+  return adaptMotion("J", classifyJMotion(input.motion, input.handedness));
+}
+
+export function ruleZ(input: ClassifyInput): RuleResult {
+  if (!input.motion || input.motion.length === 0) {
+    return {
+      letter: "Z",
+      match: false,
+      confidence: 0,
+      subChecks: [],
+      hints: [{ kind: "fingers", message: "Trace the Z shape" }],
+    };
+  }
+  return adaptMotion("Z", classifyZMotion(input.motion, input.handedness));
 }

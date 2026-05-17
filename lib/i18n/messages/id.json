@@ -67,7 +67,7 @@
     "1_blurb": "Siap-siap kenal huruf A, B, C, E, L, O, V, W, U, Y.",
     "2_blurb": "Tambah huruf D, F, I, K, R, S, T ke kosakatamu.",
     "3_blurb": "Lanjut lagi, kali ini G, H, M, N, X.",
-    "4_blurb": "Dua huruf yang tanganmu menghadap ke bawah, P dan Q. (J dan Z butuh gerakan, akan hadir di edisi mendatang.)"
+    "4_blurb": "Empat huruf tingkat lanjut: P dan Q (tangan menghadap ke bawah), plus J dan Z (digambar di udara dengan gerakan)."
   },
   "play": {
     "back": "← KEMBALI",
@@ -112,7 +112,7 @@
     "generic_send_error": "Gagal mengirim tautan."
   },
   "practice": {
-    "header_count": "§ {index} / 24 · {nato}",
+    "header_count": "§ {index} / 26 · {nato}",
     "right_handed": "TANGAN KANAN",
     "left_handed": "TANGAN KIRI",
     "toggle_hand_label": "Ganti tangan dominan",
@@ -122,7 +122,12 @@
     "palm_away_note": "TELAPAK MENGHADAP MENJAUH DARI KAMERA",
     "hint_place_hand": "Letakkan tangan di dalam bingkai.",
     "letter_alt": "Bentuk tangan untuk huruf {letter}",
-    "go_to_letter_label": "Ke huruf {letter}"
+    "go_to_letter_label": "Ke huruf {letter}",
+    "motion_start_from": "Mulai dari {letter}",
+    "motion_hold_start_pose": "Tahan pose awal",
+    "motion_recording": "Lacak sekarang",
+    "motion_success": "Mantap!",
+    "motion_try_again": "Coba lagi"
   },
   "claim": {
     "header": "KLAIM",

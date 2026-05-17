@@ -42,7 +42,7 @@ export const LEVELS: Record<LevelNumber, LevelDef> = {
     number: 4,
     pool: poolUpTo(4),
     newLetters: lettersFor(4),
-    words: ["POP", "CUP", "MAP", "QUARK", "QUIET", "HAPPY"],
+    words: ["POP", "JUMP", "JAZZ", "ZIP", "QUIZ", "COZY"],
   },
 };
 
@@ -64,13 +64,13 @@ export const CHALLENGE = {
   words: [
     "ALPHABET",
     "QUICKLY",
+    "JAZZ",
     "NIGHT",
+    "DREAM",
     "WOLF",
     "MAX",
-    "RUSH",
-    "SPEND",
-    "DREAM",
-    "WAVE",
-    "FACT",
+    "JUMP",
+    "FUZZ",
+    "SAVE",
   ],
 } as const;
