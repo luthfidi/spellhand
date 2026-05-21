@@ -5,13 +5,13 @@ export const runtime = "edge";
 
 /* Hex approximations of the OKLCH palette used in globals.css.
  * next/og (satori) doesn't support OKLCH, so we pin sRGB equivalents. */
-const INK = "#14181d";
-const INK_2 = "#1d2229";
-const BONE = "#e9ecf0";
-const BONE_2 = "#c4cbd4";
-const BONE_3 = "#b1bac5";
-const RULE = "#5b6470";
-const ACID = "#5deef3";
+const INK = "#1c1812";
+const INK_2 = "#26211b";
+const BONE = "#ece3d4";
+const BONE_2 = "#d8d1c0";
+const BONE_3 = "#beb7a4";
+const RULE = "#5b5240";
+const ACID = "#d2f76b";
 
 export async function GET(
   req: Request,

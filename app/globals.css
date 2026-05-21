@@ -2,19 +2,21 @@
 
 @theme {
   /* ---------- COLOR ---------- */
-  /* Cool charcoal canvas, bone fg, electric cyan accent — "Aurora studio". */
-  --color-ink: oklch(0.13 0.012 240);         /* cool charcoal (canvas) */
-  --color-ink-2: oklch(0.18 0.014 240);       /* lifted surface */
-  --color-ink-3: oklch(0.23 0.016 240);       /* card surface */
-  --color-rule: oklch(0.46 0.026 230);        /* hairline borders */
-  --color-rule-soft: oklch(0.36 0.022 230);   /* fainter hairlines */
-  --color-bone: oklch(0.95 0.005 240);        /* primary text */
-  --color-bone-2: oklch(0.88 0.012 230);      /* secondary text — AAA */
-  --color-bone-3: oklch(0.80 0.016 225);      /* tertiary / captions — AA+ */
-  --color-acid: oklch(0.86 0.180 205);        /* signature accent — electric cyan */
-  --color-acid-dim: oklch(0.66 0.150 205);    /* accent on dark surfaces */
+  /* Warm near-black canvas, bone fg, single acid-lime accent.
+     Foreground lightnesses bumped (bone-2/3, rule) for stronger contrast on
+     captions, hairlines, and footer text. */
+  --color-ink: oklch(0.13 0.012 60);          /* deep warm black (canvas) */
+  --color-ink-2: oklch(0.17 0.015 60);        /* lifted surface */
+  --color-ink-3: oklch(0.21 0.018 60);        /* card surface */
+  --color-rule: oklch(0.46 0.018 70);         /* hairline borders */
+  --color-rule-soft: oklch(0.36 0.015 65);    /* fainter hairlines */
+  --color-bone: oklch(0.94 0.018 80);         /* primary text */
+  --color-bone-2: oklch(0.88 0.020 80);       /* secondary text — AAA */
+  --color-bone-3: oklch(0.80 0.015 75);       /* tertiary / captions — AA+ */
+  --color-acid: oklch(0.89 0.215 128);        /* signature accent — lime */
+  --color-acid-dim: oklch(0.65 0.155 128);    /* accent on dark surfaces */
   --color-blood: oklch(0.66 0.205 25);        /* destructive / wrong */
-  --color-amber: oklch(0.82 0.160 80);        /* in-progress / warning */
+  --color-amber: oklch(0.80 0.155 80);        /* in-progress / warning */
 
   /* ---------- TYPE ---------- */
   --font-display: "Instrument Serif", ui-serif, Georgia, serif;
@@ -168,10 +170,10 @@
 
 @keyframes pulse-acid {
   0%, 100% {
-    box-shadow: 0 0 0 0 oklch(0.86 0.180 205 / 0.7);
+    box-shadow: 0 0 0 0 oklch(0.89 0.215 128 / 0.7);
   }
   50% {
-    box-shadow: 0 0 0 12px oklch(0.86 0.180 205 / 0);
+    box-shadow: 0 0 0 12px oklch(0.89 0.215 128 / 0);
   }
 }
 

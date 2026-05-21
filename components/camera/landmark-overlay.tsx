@@ -30,8 +30,8 @@ interface LandmarkOverlayProps {
   subChecks?: SubCheck[] | null;
 }
 
-const ACID = "oklch(0.86 0.180 205)";
-const DIM = "oklch(0.42 0.014 230)";
+const ACID = "oklch(0.89 0.215 128)";
+const DIM = "oklch(0.42 0.012 65)";
 
 function connKey(a: number, b: number): string {
   return a < b ? `${a}-${b}` : `${b}-${a}`;
