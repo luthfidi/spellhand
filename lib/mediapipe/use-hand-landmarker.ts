@@ -54,8 +54,13 @@ export function useHandLandmarker(
   // Guard against StrictMode double-mount and rapid re-entry.
   const startingRef = useRef(false);
   const pausedRef = useRef(false);
+  // Session generation: incremented on every stop() so any concurrent start()
+  // in flight (from StrictMode double-mount) can detect it was superseded and
+  // abort cleanly before spawning a second tick loop.
+  const sessionRef = useRef(0);
 
   const stop = useCallback(() => {
+    sessionRef.current += 1;
     runningRef.current = false;
     if (rafRef.current) {
       cancelAnimationFrame(rafRef.current);
@@ -79,6 +84,7 @@ export function useHandLandmarker(
     // Idempotent — ignore if already starting or running.
     if (startingRef.current || runningRef.current) return;
     startingRef.current = true;
+    const mySession = sessionRef.current;
     setError(null);
 
     try {
@@ -124,6 +130,15 @@ export function useHandLandmarker(
         landmarkerPromise,
         streamPromise,
       ]);
+
+      // Aborted by a stop() that ran while we were awaiting (typically a
+      // StrictMode double-mount). Release the freshly-acquired stream and
+      // exit before touching any shared refs — the newer start() owns them.
+      if (mySession !== sessionRef.current) {
+        stream.getTracks().forEach((t) => t.stop());
+        return;
+      }
+
       landmarkerRef.current = landmarker;
       streamRef.current = stream;
 
@@ -150,6 +165,9 @@ export function useHandLandmarker(
       setStatus("running");
 
       const tick = () => {
+        // If a newer start() / stop() superseded us, exit without rescheduling
+        // so this tick loop self-terminates cleanly.
+        if (mySession !== sessionRef.current) return;
         if (!runningRef.current) return;
         rafRef.current = requestAnimationFrame(tick);
 
@@ -194,6 +212,8 @@ export function useHandLandmarker(
       };
       rafRef.current = requestAnimationFrame(tick);
     } catch (e: unknown) {
+      // If a newer start() has taken over, don't clobber its state.
+      if (mySession !== sessionRef.current) return;
       const message = e instanceof Error ? e.message : String(e);
       startingRef.current = false;
       if (message.toLowerCase().includes("permission") || message.includes("NotAllowed")) {
