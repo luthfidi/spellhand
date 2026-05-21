@@ -43,7 +43,7 @@ export async function GET(
     day: "numeric",
   });
 
-  return new ImageResponse(
+  const response = new ImageResponse(
     (
       <div
         style={{
@@ -209,4 +209,12 @@ export async function GET(
       height: 630,
     },
   );
+
+  // Certificates are immutable once issued — long cache is safe. Different
+  // lang= variants are separate URLs, so the cache key is correct.
+  response.headers.set(
+    "Cache-Control",
+    "public, max-age=300, s-maxage=86400, stale-while-revalidate=604800",
+  );
+  return response;
 }

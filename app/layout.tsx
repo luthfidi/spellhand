@@ -69,6 +69,12 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} className={`${display.variable} ${mono.variable}`}>
+      <head>
+        {/* MediaPipe model + WASM live on these CDNs. Establishing the TLS
+            handshake early shaves ~100–300ms off the first /play visit. */}
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://storage.googleapis.com" crossOrigin="anonymous" />
+      </head>
       <body className="min-h-svh overflow-x-clip antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
           <MotionProvider>

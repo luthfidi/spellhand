@@ -5,8 +5,39 @@ import { createClient } from "@/lib/supabase/server";
 
 const NAME_MAX = 40;
 
+// Build regexes from codepoints so the source file stays pure ASCII (literal
+// control characters in source are easy to copy-corrupt and hard to review).
+function range(from: number, to: number): string {
+  return `${String.fromCharCode(from)}-${String.fromCharCode(to)}`;
+}
+
+// C0 + C1 control characters (incl. bidi overrides that could spoof identity).
+// eslint-disable-next-line no-control-regex
+const CONTROL_CHARS = new RegExp(`[${range(0x00, 0x1f)}${range(0x7f, 0x9f)}]`, "gu");
+
+// Zero-width joiners, bidi overrides, BOM, word joiners, variation selectors.
+const INVISIBLE_CHARS = new RegExp(
+  `[${range(0x200b, 0x200f)}${range(0x202a, 0x202e)}${range(0x2060, 0x206f)}\\uFEFF${range(0xfe00, 0xfe0f)}]`,
+  "gu",
+);
+
+// Lone UTF-16 surrogate halves (broken from copy-paste / wonky encodings).
+const LONE_SURROGATES = /[\uD800-\uDFFF]/gu;
+
+/**
+ * Clean the display name for safe rendering on the certificate page AND
+ * inside the satori-rendered OG image. Caps to NAME_MAX after sanitisation.
+ * Emoji and non-Latin scripts are preserved; only structural-attack and
+ * unrenderable characters are stripped.
+ */
 function sanitizeName(raw: string): string {
-  return raw.trim().slice(0, NAME_MAX);
+  return raw
+    .replace(CONTROL_CHARS, "")
+    .replace(INVISIBLE_CHARS, "")
+    .replace(LONE_SURROGATES, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, NAME_MAX);
 }
 
 /**

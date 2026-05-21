@@ -18,13 +18,16 @@ import { CHALLENGE } from "@/lib/levels";
 import type { LetterCode } from "@/lib/letters";
 import type { SubCheck } from "@/lib/recognition/types";
 import type { Hand } from "@/lib/hooks/use-hand-preference";
+import {
+  CELEBRATE_HOLD_MS,
+  DECAY_PER_SEC,
+  NOT_IMPLEMENTED_AUTO_ADVANCE_MS,
+  PROGRESS_LOCK,
+  SKIP_OFFER_MS_CHALLENGE as SKIP_OFFER_MS,
+  SUSTAIN_PER_SEC,
+} from "@/lib/timings";
 import { cn, pad2 } from "@/lib/utils";
 import { STAGE_MOTION } from "./stage-motion";
-
-const SUSTAIN_PER_SEC = 1.7;
-const DECAY_PER_SEC = 0.6;
-const PROGRESS_LOCK = 1.0;
-const SKIP_OFFER_MS = 20_000;
 
 export function ChallengeStage({
   hand,
@@ -85,7 +88,7 @@ export function ChallengeStage({
             setWordIndex((wi) => wi + 1);
             setLetterIndex(0);
           }
-        }, 1100);
+        }, CELEBRATE_HOLD_MS);
       } else {
         setLetterIndex((li) => li + 1);
       }
@@ -113,7 +116,7 @@ export function ChallengeStage({
     setConfidence(result.confidence);
     if (result.notImplemented) {
       setHint(t("hint_skipping"));
-      const timer = setTimeout(advance, 1600);
+      const timer = setTimeout(advance, NOT_IMPLEMENTED_AUTO_ADVANCE_MS);
       return () => clearTimeout(timer);
     }
     if (result.match) {
@@ -254,7 +257,12 @@ export function ChallengeStage({
             ) : null}
           </AnimatePresence>
 
-          <div className="pointer-events-none absolute inset-x-0 bottom-5 z-20 flex justify-center px-6">
+          <div
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            className="pointer-events-none absolute inset-x-0 bottom-5 z-20 flex justify-center px-6"
+          >
             <AnimatePresence mode="wait">
               {running && hint ? (
                 <motion.div
@@ -399,14 +407,14 @@ function CertificateEarned({
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [resentFlash, setResentFlash] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const display = name.trim() || tHero("cert_name_placeholder");
-  const canSubmit = name.trim().length > 0 && email.includes("@") && !sending && !sent;
+  const emailLooksValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  const canSubmit = name.trim().length > 0 && emailLooksValid && !sending && !sent;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!canSubmit) return;
+  const send = async () => {
     setSending(true);
     setError(null);
     try {
@@ -417,11 +425,29 @@ function CertificateEarned({
       } else {
         setSent(true);
       }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t("generic_send_error"));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("generic_send_error"));
     } finally {
       setSending(false);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canSubmit) return;
+    await send();
+  };
+
+  const editEmail = () => {
+    setSent(false);
+    setError(null);
+  };
+
+  const resend = async () => {
+    if (sending) return;
+    await send();
+    setResentFlash(true);
+    setTimeout(() => setResentFlash(false), 2500);
   };
 
   return (
@@ -544,6 +570,26 @@ function CertificateEarned({
               {t("sent_body_suffix")}
             </p>
             <p className="caption mt-2 text-bone-3">{t("sent_footnote")}</p>
+
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+              <button
+                type="button"
+                onClick={resend}
+                disabled={sending}
+                className="caption hover:text-acid disabled:opacity-50"
+              >
+                {sending ? t("submit_sending") : resentFlash ? t("resend_done") : t("resend")}
+              </button>
+              <span aria-hidden className="text-bone-3">·</span>
+              <button
+                type="button"
+                onClick={editEmail}
+                className="caption hover:text-acid"
+              >
+                {t("edit_email")}
+              </button>
+            </div>
+            {error ? <p className="caption mt-2 text-blood">{error}</p> : null}
           </motion.div>
         )}
       </div>

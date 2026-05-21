@@ -82,23 +82,26 @@ export function useHandLandmarker(
     setError(null);
 
     try {
+      // Kick off model load and camera permission *in parallel*. Without this
+      // the user waits sequentially: download (multi-MB WASM + model) → then
+      // permission prompt → then play(). Parallelising lets the user respond
+      // to the OS prompt while the model downloads in the background.
       setStatus("loading-model");
-      const vision = await import("@mediapipe/tasks-vision");
-      const { HandLandmarker, FilesetResolver } = vision;
-
-      const wasm = await FilesetResolver.forVisionTasks(WASM_CDN);
-      const landmarker = await HandLandmarker.createFromOptions(wasm, {
-        baseOptions: { modelAssetPath: MODEL_URL, delegate: "GPU" },
-        runningMode: "VIDEO",
-        numHands: 1,
-        minHandDetectionConfidence: 0.5,
-        minHandPresenceConfidence: 0.5,
-        minTrackingConfidence: 0.5,
-      });
-      landmarkerRef.current = landmarker;
+      const landmarkerPromise = (async () => {
+        const vision = await import("@mediapipe/tasks-vision");
+        const wasm = await vision.FilesetResolver.forVisionTasks(WASM_CDN);
+        return vision.HandLandmarker.createFromOptions(wasm, {
+          baseOptions: { modelAssetPath: MODEL_URL, delegate: "GPU" },
+          runningMode: "VIDEO",
+          numHands: 1,
+          minHandDetectionConfidence: 0.5,
+          minHandPresenceConfidence: 0.5,
+          minTrackingConfidence: 0.5,
+        });
+      })();
 
       setStatus("requesting-camera");
-      const stream = await navigator.mediaDevices.getUserMedia({
+      const streamPromise = navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: facing,
           width: { ideal: 1280 },
@@ -107,6 +110,21 @@ export function useHandLandmarker(
         },
         audio: false,
       });
+
+      // If the user grants permission before the model finishes, reflect that
+      // in the status label so the loading spinner isn't misleading.
+      streamPromise.then(
+        () => setStatus((s) => (s === "requesting-camera" ? "loading-model" : s)),
+        () => {
+          /* permission denied → handled by main catch */
+        },
+      );
+
+      const [landmarker, stream] = await Promise.all([
+        landmarkerPromise,
+        streamPromise,
+      ]);
+      landmarkerRef.current = landmarker;
       streamRef.current = stream;
 
       const video = videoRef.current;
@@ -114,17 +132,15 @@ export function useHandLandmarker(
       video.srcObject = stream;
       video.playsInline = true;
       video.muted = true;
-      // Autoplay can be blocked on mobile even with muted + playsInline if the
-      // user-gesture window has expired during model load. Catch & continue —
-      // the <video autoPlay> attribute + the detection loop's videoWidth check
-      // will pick things up once the user next interacts with the page.
-      try {
-        await video.play();
-      } catch (playError) {
+      // Fire-and-forget play(). Awaiting can hang for hundreds of ms on mobile
+      // even with muted + playsInline — the <video autoPlay> attribute + the
+      // detection loop's `videoWidth` guard pick up the slack, and the
+      // visibility/pointerdown retry effect below handles policy blocks.
+      void video.play().catch((playError) => {
         if (process.env.NODE_ENV !== "production") {
           console.warn("video.play() blocked; will retry on next interaction:", playError);
         }
-      }
+      });
 
       setStatus("ready");
 

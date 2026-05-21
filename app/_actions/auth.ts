@@ -24,7 +24,9 @@ export async function sendCertMagicLink(
   if (!cleanName) return { error: t("name_required") };
 
   const cleanEmail = email.trim().toLowerCase();
-  if (!cleanEmail.includes("@")) return { error: t("invalid_email") };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+    return { error: t("invalid_email") };
+  }
 
   const supabase = await createClient();
   const h = await headers();

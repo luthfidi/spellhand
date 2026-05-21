@@ -50,16 +50,47 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   };
 }
 
+const SITE = "https://spellhand.vercel.app";
+
 export default async function CertPage({ params }: Params) {
   const { token } = await params;
   const cert = await fetchCertificate(token);
   if (!cert) notFound();
 
+  // schema.org JSON-LD so LinkedIn / Google / share preview surfaces recognise
+  // this as a credential rather than a generic page.
+  const credentialSchema = {
+    "@context": "https://schema.org",
+    "@type": "EducationalOccupationalCredential",
+    name: "Certificate of Fingerspelling",
+    description:
+      "Demonstrated mastery of the 24 static letters of the American Sign Language alphabet, classified live in-browser.",
+    url: `${SITE}/cert/${cert.share_token}`,
+    dateCreated: cert.issued_at,
+    credentialCategory: "certificate",
+    recognizedBy: {
+      "@type": "Organization",
+      name: "Spellhand",
+      url: SITE,
+    },
+    about: {
+      "@type": "Thing",
+      name: "American Sign Language fingerspelling alphabet",
+    },
+  };
+
   return (
-    <CertificateView
-      token={cert.share_token}
-      displayName={cert.display_name}
-      issuedAt={cert.issued_at}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(credentialSchema) }}
+      />
+      <CertificateView
+        token={cert.share_token}
+        displayName={cert.display_name}
+        issuedAt={cert.issued_at}
+      />
+    </>
   );
 }

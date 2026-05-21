@@ -182,7 +182,12 @@ export function PracticeSession({ meta }: { meta: LetterMeta }) {
 
           <LockedRing active={running && confidence >= 0.999} />
 
-          <div className="pointer-events-none absolute inset-x-0 bottom-5 z-20 flex justify-center px-6">
+          <div
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            className="pointer-events-none absolute inset-x-0 bottom-5 z-20 flex justify-center px-6"
+          >
             <AnimatePresence mode="wait">
               {running && hint ? (
                 <motion.div

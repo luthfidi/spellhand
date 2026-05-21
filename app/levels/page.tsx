@@ -4,11 +4,13 @@ import { useRouter } from "next/navigation";
 import { LevelSelectStage } from "@/app/_stages/level-select-stage";
 import { HandPreferenceModal } from "@/components/onboard/hand-preference-modal";
 import { useHandPreference } from "@/lib/hooks/use-hand-preference";
+import { useWarmMediaPipe } from "@/lib/hooks/use-warm-mediapipe";
 
 export default function LevelsPage() {
   const router = useRouter();
   const { hand, setHand, loaded } = useHandPreference();
   const showModal = loaded && !hand;
+  useWarmMediaPipe();
 
   return (
     <>
