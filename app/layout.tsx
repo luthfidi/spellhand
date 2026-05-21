@@ -3,6 +3,7 @@ import { Instrument_Serif, IBM_Plex_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { MotionProvider } from "@/components/motion-provider";
 import "./globals.css";
 
 const display = Instrument_Serif({
@@ -70,7 +71,9 @@ export default async function RootLayout({
     <html lang={locale} className={`${display.variable} ${mono.variable}`}>
       <body className="min-h-svh overflow-x-clip antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <ErrorBoundary>{children}</ErrorBoundary>
+          <MotionProvider>
+            <ErrorBoundary>{children}</ErrorBoundary>
+          </MotionProvider>
         </NextIntlClientProvider>
       </body>
     </html>

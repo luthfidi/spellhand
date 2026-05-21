@@ -1,18 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { LetterGlyph } from "@/components/specimen/letter-glyph";
+import { LetterImage } from "@/components/reference/letter-image";
+import { NEEDS_PERSPECTIVE_NOTE } from "@/lib/letter-display";
 import type { LetterCode } from "@/lib/letters";
 import { cn } from "@/lib/utils";
-
-const INVERTED_LETTERS = new Set<LetterCode>(["G", "H", "P", "Q"]);
-
-/** Letters whose hand orientation is non-trivial — show a perspective note. */
-const NEEDS_PERSPECTIVE_NOTE = new Set<LetterCode>(["G", "H", "P", "Q"]);
-
-/** Per-letter rotation (degrees). Negative = counter-clockwise. */
-const ROTATED_LETTERS = new Map<LetterCode, number>();
 
 /**
  * Game-only left panel. Hand image + target letter side-by-side on top,
@@ -118,43 +111,3 @@ export function GameLeftPanel({
   );
 }
 
-function LetterImage({ letter, mirror }: { letter: LetterCode; mirror?: boolean }) {
-  const [errored, setErrored] = useState(false);
-  const effectiveMirror = INVERTED_LETTERS.has(letter) ? !mirror : mirror;
-  const rotation = ROTATED_LETTERS.get(letter) ?? 0;
-
-  // Compose transform — mirror then rotate (order matters; rotate first
-  // would flip the visual rotation direction after mirroring).
-  const transform =
-    (effectiveMirror ? "scaleX(-1) " : "") + (rotation ? `rotate(${rotation}deg)` : "");
-  const style = transform.trim() ? { transform } : undefined;
-
-  if (errored) {
-    return (
-      <LetterGlyph
-        letter={letter}
-        size="xl"
-        className="text-[24vw] sm:text-[18vw] lg:text-[14vw] xl:text-[12rem] text-bone"
-        style={style}
-      />
-    );
-  }
-
-  // eslint-disable-next-line @next/next/no-img-element
-  return (
-    <img
-      src={`/letters/asl/${letter.toLowerCase()}.svg`}
-      alt={`Hand shape for the letter ${letter}`}
-      onError={() => setErrored(true)}
-      className={cn(
-        // Mobile: cap to viewport-relative size so it scales with phone height.
-        // Desktop / tablet: fill container.
-        "max-h-[22vh] max-w-[55vw] object-contain sm:max-h-full sm:max-w-full",
-        "[filter:invert(0.97)_sepia(0.08)_saturate(0.4)]",
-        "[width:auto] [height:auto]",
-      )}
-      style={style}
-      draggable={false}
-    />
-  );
-}

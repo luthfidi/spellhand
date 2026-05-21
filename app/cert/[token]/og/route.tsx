@@ -14,10 +14,11 @@ const RULE = "#3d3830";
 const ACID = "#d2f76b";
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ token: string }> },
 ) {
   const { token } = await params;
+  const lang = new URL(req.url).searchParams.get("lang") === "id" ? "id-ID" : "en-US";
 
   // Public view — anon read allowed by RLS, no auth cookies needed.
   const supabase = createClient(
@@ -36,7 +37,7 @@ export async function GET(
     return new Response("Certificate not found", { status: 404 });
   }
 
-  const dateLabel = new Date(data.issued_at).toLocaleDateString("en-US", {
+  const dateLabel = new Date(data.issued_at).toLocaleDateString(lang, {
     year: "numeric",
     month: "long",
     day: "numeric",

@@ -11,18 +11,16 @@ import { CameraGate } from "@/components/camera/camera-gate";
 import { ConfidenceDisplay } from "@/components/feedback/confidence-display";
 import { LockedRing } from "@/components/feedback/locked-ring";
 import { LetterGlyph } from "@/components/specimen/letter-glyph";
+import { LetterImage } from "@/components/reference/letter-image";
 import { SpellhandMark } from "@/components/marks/spellhand-mark";
 import { useHandLandmarker } from "@/lib/mediapipe/use-hand-landmarker";
 import { useHandPreference } from "@/lib/hooks/use-hand-preference";
 import { classifyAgainstTarget } from "@/lib/recognition/classify";
 import { LETTERS, type LetterCode, type LetterMeta } from "@/lib/letters";
+import { NEEDS_PERSPECTIVE_NOTE } from "@/lib/letter-display";
 import type { SubCheck } from "@/lib/recognition/types";
 import { SubCheckPanel } from "@/components/debug/sub-check-panel";
 import { cn, pad2 } from "@/lib/utils";
-
-const INVERTED_LETTERS = new Set<LetterCode>(["G", "H", "P", "Q"]);
-const NEEDS_PERSPECTIVE_NOTE = new Set<LetterCode>(["G", "H", "P", "Q"]);
-const ROTATED_LETTERS = new Map<LetterCode, number>();
 
 export function PracticeSession({ meta }: { meta: LetterMeta }) {
   const t = useTranslations("practice");
@@ -239,7 +237,7 @@ function PracticeReferencePanel({
             >
               {NEEDS_PERSPECTIVE_NOTE.has(letter) ? <PalmAwayNote /> : null}
               <div className="flex min-h-0 w-full flex-1 items-center justify-center p-3 sm:p-0">
-                <LetterImage letter={letter} mirror={mirror} />
+                <LocalisedLetterImage letter={letter} mirror={mirror} />
               </div>
             </motion.div>
           </AnimatePresence>
@@ -276,42 +274,9 @@ function PalmAwayNote() {
   );
 }
 
-function LetterImage({ letter, mirror }: { letter: LetterCode; mirror: boolean }) {
+function LocalisedLetterImage({ letter, mirror }: { letter: LetterCode; mirror: boolean }) {
   const t = useTranslations("practice");
-  const [errored, setErrored] = useState(false);
-  const effectiveMirror = INVERTED_LETTERS.has(letter) ? !mirror : mirror;
-  const rotation = ROTATED_LETTERS.get(letter) ?? 0;
-  const transform =
-    (effectiveMirror ? "scaleX(-1) " : "") + (rotation ? `rotate(${rotation}deg)` : "");
-  const style = transform.trim() ? { transform } : undefined;
-
-  if (errored) {
-    return (
-      <LetterGlyph
-        letter={letter}
-        size="xl"
-        className="text-[24vw] sm:text-[18vw] lg:text-[14vw] xl:text-[12rem] text-bone"
-        style={style}
-      />
-    );
-  }
-  // eslint-disable-next-line @next/next/no-img-element
-  return (
-    <img
-      src={`/letters/asl/${letter.toLowerCase()}.svg`}
-      alt={t("letter_alt", { letter })}
-      onError={() => setErrored(true)}
-      className={cn(
-        // Mobile: cap to viewport-relative size so it scales with phone height.
-        // Desktop / tablet: fill container.
-        "max-h-[22vh] max-w-[55vw] object-contain sm:max-h-full sm:max-w-full",
-        "[filter:invert(0.97)_sepia(0.08)_saturate(0.4)]",
-        "[width:auto] [height:auto]",
-      )}
-      style={style}
-      draggable={false}
-    />
-  );
+  return <LetterImage letter={letter} mirror={mirror} alt={t("letter_alt", { letter })} />;
 }
 
 /* ────────────── Edge arrows (prev / next) ────────────── */

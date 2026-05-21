@@ -49,7 +49,7 @@ export function CertificateView({
     if (downloading) return;
     setDownloading(true);
     try {
-      const res = await fetch(`/cert/${token}/og`);
+      const res = await fetch(`/cert/${token}/og?lang=${locale}`);
       if (!res.ok) throw new Error("Failed to generate image");
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
