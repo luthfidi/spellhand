@@ -85,7 +85,8 @@
     "finish": "FINISH",
     "all_levels": "← All levels",
     "hint_place_hand": "Place your hand inside the frame.",
-    "hint_skipping": "Skipping, this letter is on the bench."
+    "hint_skipping": "Skipping, this letter is on the bench.",
+    "skip_letter": "SKIP LETTER"
   },
   "challenge": {
     "back": "← BACK",
@@ -109,6 +110,7 @@
     "sent_footnote": "You can close this tab.",
     "hint_place_hand": "Place your hand inside the frame.",
     "hint_skipping": "Skipping, this letter is on the bench.",
+    "skip_letter": "SKIP LETTER",
     "generic_send_error": "Failed to send link."
   },
   "practice": {

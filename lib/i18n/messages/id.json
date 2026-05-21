@@ -85,7 +85,8 @@
     "finish": "SELESAI",
     "all_levels": "← Semua level",
     "hint_place_hand": "Letakkan tangan di dalam bingkai.",
-    "hint_skipping": "Dilewati, huruf ini belum tersedia."
+    "hint_skipping": "Dilewati, huruf ini belum tersedia.",
+    "skip_letter": "LEWATI HURUF"
   },
   "challenge": {
     "back": "← KEMBALI",
@@ -109,6 +110,7 @@
     "sent_footnote": "Kamu bisa tutup tab ini.",
     "hint_place_hand": "Letakkan tangan di dalam bingkai.",
     "hint_skipping": "Dilewati, huruf ini belum tersedia.",
+    "skip_letter": "LEWATI HURUF",
     "generic_send_error": "Gagal mengirim tautan."
   },
   "practice": {

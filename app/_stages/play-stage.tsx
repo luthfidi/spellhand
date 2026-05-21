@@ -23,6 +23,7 @@ import { STAGE_MOTION } from "./stage-motion";
 const SUSTAIN_PER_SEC = 1.7;
 const DECAY_PER_SEC = 0.6;
 const PROGRESS_LOCK = 1.0;
+const SKIP_OFFER_MS = 15_000;
 
 export function PlayStage({
   levelNumber,
@@ -51,13 +52,16 @@ export function PlayStage({
   const [wordIndex, setWordIndex] = useState(0);
   const [letterIndex, setLetterIndex] = useState(0);
   const [matchProgress, setMatchProgress] = useState(0);
-  const [lastTs, setLastTs] = useState<number | null>(null);
+  // Frame-to-frame timing — keep as a ref so the classifier effect doesn't
+  // depend on its own write and re-trigger every render (infinite loop).
+  const lastTsRef = useRef<number | null>(null);
   const [hint, setHint] = useState<string | null>(null);
   const [score, setScore] = useState({ correct: 0, attempted: 0 });
   const [celebrate, setCelebrate] = useState(false);
   const [complete, setComplete] = useState(false);
   const [subChecks, setSubChecks] = useState<SubCheck[] | null>(null);
   const [confidence, setConfidence] = useState(0);
+  const [skipOffered, setSkipOffered] = useState(false);
 
   const word = level.words[wordIndex];
   const targetLetter = (word?.[letterIndex] ?? "A") as LetterCode;
@@ -69,34 +73,52 @@ export function PlayStage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const advance = useCallback(() => {
-    setScore((s) => ({ correct: s.correct + 1, attempted: s.attempted + 1 }));
-    setMatchProgress(0);
-    setLastTs(null);
-    setHint(null);
+  const goNext = useCallback(
+    (counted: boolean) => {
+      setScore((s) => ({
+        correct: s.correct + (counted ? 1 : 0),
+        attempted: s.attempted + 1,
+      }));
+      setMatchProgress(0);
+      lastTsRef.current = null;
+      setHint(null);
+      setSkipOffered(false);
 
-    if (letterIndex + 1 >= word.length) {
-      setCelebrate(true);
-      setTimeout(() => {
-        setCelebrate(false);
-        if (wordIndex + 1 >= level.words.length) {
-          setComplete(true);
-          stop();
-        } else {
-          setWordIndex((wi) => wi + 1);
-          setLetterIndex(0);
-        }
-      }, 1100);
-    } else {
-      setLetterIndex((li) => li + 1);
-    }
-  }, [letterIndex, word, wordIndex, level.words.length, stop]);
+      if (letterIndex + 1 >= word.length) {
+        setCelebrate(true);
+        setTimeout(() => {
+          setCelebrate(false);
+          if (wordIndex + 1 >= level.words.length) {
+            setComplete(true);
+            stop();
+          } else {
+            setWordIndex((wi) => wi + 1);
+            setLetterIndex(0);
+          }
+        }, 1100);
+      } else {
+        setLetterIndex((li) => li + 1);
+      }
+    },
+    [letterIndex, word, wordIndex, level.words.length, stop],
+  );
+
+  const advance = useCallback(() => goNext(true), [goNext]);
+  const skip = useCallback(() => goNext(false), [goNext]);
+
+  // Offer a skip button if the user has been stuck on the same letter for a while.
+  useEffect(() => {
+    setSkipOffered(false);
+    if (celebrate || complete) return;
+    const timer = setTimeout(() => setSkipOffered(true), SKIP_OFFER_MS);
+    return () => clearTimeout(timer);
+  }, [letterIndex, wordIndex, celebrate, complete]);
 
   useEffect(() => {
     if (!detection || celebrate || complete) return;
     const now = detection.timestamp;
-    const dt = lastTs == null ? 0.04 : Math.min((now - lastTs) / 1000, 0.2);
-    setLastTs(now);
+    const dt = lastTsRef.current == null ? 0.04 : Math.min((now - lastTsRef.current) / 1000, 0.2);
+    lastTsRef.current = now;
     const { result } = classifyAgainstTarget(detection, targetLetter);
     setSubChecks(result.subChecks ?? null);
     setConfidence(result.confidence);
@@ -113,7 +135,7 @@ export function PlayStage({
       setHint(raw ? translateHint(raw, locale) : null);
       setMatchProgress((p) => Math.max(p - DECAY_PER_SEC * dt, 0));
     }
-  }, [detection, targetLetter, lastTs, advance, celebrate, complete, locale, t]);
+  }, [detection, targetLetter, advance, celebrate, complete, locale, t]);
 
   useEffect(() => {
     if (detection || status !== "running" || celebrate || complete) return;
@@ -237,6 +259,22 @@ export function PlayStage({
           ) : null}
 
           <LockedRing active={running && confidence >= 0.999} />
+
+          <AnimatePresence>
+            {running && skipOffered && !celebrate ? (
+              <motion.button
+                key="skip"
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.25 }}
+                onClick={skip}
+                className="hairline absolute left-1/2 top-4 z-20 -translate-x-1/2 rounded-full bg-ink/85 px-4 py-1.5 font-mono text-[11px] text-bone-2 backdrop-blur-sm transition-colors hover:text-acid sm:text-xs"
+              >
+                {t("skip_letter")} <span aria-hidden>→</span>
+              </motion.button>
+            ) : null}
+          </AnimatePresence>
 
           <div className="pointer-events-none absolute inset-x-0 bottom-5 z-20 flex justify-center px-6">
             <AnimatePresence mode="wait">

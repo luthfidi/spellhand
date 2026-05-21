@@ -148,16 +148,25 @@ export async function GET(
             AWARDED TO
           </div>
 
-          {/* Display name */}
+          {/* Display name — scale down for long names to avoid overflow in
+              the 1200×630 canvas. The DB caps at 40 chars; serif italic at
+              64px fits ~18 chars comfortably. */}
           <div
             style={{
               display: "flex",
               color: BONE,
-              fontSize: 64,
+              fontSize:
+                data.display_name.length > 28
+                  ? 40
+                  : data.display_name.length > 18
+                    ? 52
+                    : 64,
               fontStyle: "italic",
               fontFamily: "serif",
               marginTop: 12,
+              maxWidth: 960,
               textAlign: "center",
+              lineHeight: 1.05,
             }}
           >
             {data.display_name}

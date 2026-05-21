@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 import { translateHint } from "@/lib/i18n/hints";
@@ -83,6 +84,20 @@ export function PracticeSession({ meta }: { meta: LetterMeta }) {
 
   const prev = LETTERS[(meta.index - 2 + LETTERS.length) % LETTERS.length];
   const next = LETTERS[meta.index % LETTERS.length];
+
+  const router = useRouter();
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      // Ignore if user is typing somewhere or holding modifiers.
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      const target = e.target as HTMLElement | null;
+      if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
+      if (e.key === "ArrowLeft") router.push(`/practice/${prev.code.toLowerCase()}`);
+      else if (e.key === "ArrowRight") router.push(`/practice/${next.code.toLowerCase()}`);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [prev.code, next.code, router]);
 
   return (
     <main className="flex h-svh flex-col overflow-hidden bg-ink">
