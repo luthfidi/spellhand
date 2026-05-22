@@ -18,7 +18,11 @@
 - **Rule-based classifier**: one TypeScript function per letter; no model training, no dataset
 - **Per-finger sub-check overlay**: when you're off, you see *which finger* is wrong
 - **Right- / left-handed** toggle that mirrors detection logic, not just the video
-- **Magic-link auth** + a **shareable certificate** with a dynamic OG image at `/cert/[token]`
+- **Magic-link auth** + a **shareable certificate** with a dynamic OG image and JSON-LD credential schema at `/cert/[token]`
+- **Localized** in English and Bahasa Indonesia (`next-intl`)
+- **Installable** as a PWA (manifest + adaptive icons; offline support deferred)
+- **Accessibility**: `prefers-reduced-motion` respected, live regions for hints, AA-passing contrast
+- **Skip-letter escape hatch** after sustained struggle, and arrow-key navigation on the practice page
 
 ## Quickstart
 
@@ -51,6 +55,7 @@ The trainer pages short-circuit cleanly when Supabase isn't configured; only the
 | Hand tracking | **`@mediapipe/tasks-vision`** (`HandLandmarker`) |
 | Classification | Custom rule-based module (pattern inspired by [`fingerpose`](https://github.com/andypotato/fingerpose)) |
 | Animation | **Motion** (`motion/react`) |
+| i18n | **`next-intl`** (English, Bahasa Indonesia) |
 | Backend | **Supabase** via **`@supabase/ssr`** |
 | Hosting | Vercel |
 
@@ -66,21 +71,30 @@ This is rule-based on purpose: no training set, no model bundle. Every letter is
 
 ```
 app/                          # Next.js App Router
-  _stages/                    # hero, level-select, play, challenge
-  _actions/                   # server actions (auth, cert)
+  _stages/                    # hero, level-select, level-intro, play, challenge
+  _actions/                   # server actions (auth, cert, locale)
   auth/callback/              # magic-link redirect handler
   levels/ play/ practice/     # progression + practice modes
   challenge/ challenge/claim/ # final exam, cert claim
-  cert/[token]/               # public share page + dynamic OG image
+  cert/[token]/               # public share page + dynamic OG image (next/og)
+  manifest.ts robots.ts       # PWA + SEO file-based metadata
+  sitemap.ts apple-icon.tsx
 components/
   camera/ feedback/           # video, overlay, gate, confidence ring
   reference/ specimen/        # in-game refs + landing cards
+  onboard/                    # hand-preference modal (first-visit)
+  motion-provider.tsx         # MotionConfig (respects reduced-motion)
+  error-boundary.tsx          # render-error recovery UI
   debug/                      # ?debug=1 sub-check panel
 lib/
   mediapipe/                  # camera + HandLandmarker lifecycle
   recognition/asl/            # one rule per letter
   supabase/                   # browser + server clients
+  i18n/                       # next-intl messages + hint translator
+  hooks/                      # use-hand-preference, use-warm-mediapipe
   letters.ts levels.ts        # static catalogue
+  letter-display.ts           # per-letter mirror/rotation hints
+  timings.ts                  # shared gameplay timing constants
 middleware.ts                 # Supabase auth-cookie refresh (Edge)
 supabase/migrations/          # SQL: profiles + certificates + RLS
 public/letters/asl/           # a.svg .. y.svg (Wikimedia, PD)
@@ -114,7 +128,7 @@ All hand tracking runs in the browser; no video frames ever leave the device. On
 
 - **Phase 4**: `J` and `Z` (motion classification, ~30-frame landmark sequence)
 - **Phase 5**: 3D rigged hand reference (React Three Fiber) replacing the SVGs
-- **Phase 6**: PWA install + global leaderboard
+- **Phase 6**: Offline-capable PWA (service worker via Serwist) + global leaderboard. *Install + adaptive icons already ship.*
 - **Phase 7**: BISINDO support (two-hand tracking)
 
 Per-letter mastery, streaks, and tiered certificates are designed (`language_code` column, future tables) but not yet shipped, to keep the schema minimal until those features need a store.
