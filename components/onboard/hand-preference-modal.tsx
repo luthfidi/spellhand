@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence } from "motion/react";
+import { m, AnimatePresence } from "motion/react";
 import { useTranslations } from "next-intl";
 import type { Hand } from "@/lib/hooks/use-hand-preference";
 
@@ -15,7 +15,7 @@ export function HandPreferenceModal({
   return (
     <AnimatePresence>
       {open ? (
-        <motion.div
+        <m.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -25,7 +25,7 @@ export function HandPreferenceModal({
           aria-modal="true"
           aria-label={t("modal_label")}
         >
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
@@ -54,8 +54,8 @@ export function HandPreferenceModal({
                 {t("right")}
               </button>
             </div>
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       ) : null}
     </AnimatePresence>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -13,7 +13,7 @@ export function ConfidenceDisplay({ confidence }: { confidence: number }) {
   const locked = confidence >= 0.999;
 
   return (
-    <motion.p
+    <m.p
       animate={locked ? { scale: [1, 1.06, 1] } : { scale: 1 }}
       transition={
         locked
@@ -27,6 +27,6 @@ export function ConfidenceDisplay({ confidence }: { confidence: number }) {
     >
       {pct}
       <span className="text-2xl sm:text-3xl">%</span>
-    </motion.p>
+    </m.p>
   );
 }

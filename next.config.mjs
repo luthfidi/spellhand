@@ -16,6 +16,20 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ["motion", "@mediapipe/tasks-vision"],
   },
+  async headers() {
+    return [
+      {
+        // ASL letter illustrations are immutable, version-pinned by filename.
+        source: "/letters/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default withNextIntl(nextConfig);

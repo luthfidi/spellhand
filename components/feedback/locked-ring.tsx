@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence } from "motion/react";
+import { m, AnimatePresence } from "motion/react";
 
 /**
  * Inset acid glow that fades in when the user has matched the target letter.
@@ -10,7 +10,7 @@ export function LockedRing({ active }: { active: boolean }) {
   return (
     <AnimatePresence>
       {active ? (
-        <motion.div
+        <m.div
           key="locked-ring"
           aria-hidden
           initial={{ opacity: 0 }}

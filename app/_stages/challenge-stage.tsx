@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { m, AnimatePresence } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 import { translateHint } from "@/lib/i18n/hints";
 import type { Locale } from "@/lib/i18n/config";
@@ -166,7 +166,7 @@ export function ChallengeStage({
   }
 
   return (
-    <motion.main {...STAGE_MOTION} className="flex h-svh flex-col overflow-hidden bg-ink">
+    <m.main {...STAGE_MOTION} className="flex h-svh flex-col overflow-hidden bg-ink">
       <SubCheckPanel target={targetLetter} subChecks={subChecks} confidence={confidence} />
 
       <header className="ruled-b sticky top-0 z-30 bg-ink/85 backdrop-blur-sm">
@@ -243,7 +243,7 @@ export function ChallengeStage({
 
           <AnimatePresence>
             {running && skipOffered && !celebrate ? (
-              <motion.button
+              <m.button
                 key="skip"
                 initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -253,7 +253,7 @@ export function ChallengeStage({
                 className="hairline absolute left-1/2 top-4 z-20 -translate-x-1/2 rounded-full bg-ink/85 px-4 py-1.5 font-mono text-[11px] text-bone-2 backdrop-blur-sm transition-colors hover:text-acid sm:text-xs"
               >
                 {t("skip_letter")} <span aria-hidden>→</span>
-              </motion.button>
+              </m.button>
             ) : null}
           </AnimatePresence>
 
@@ -265,7 +265,7 @@ export function ChallengeStage({
           >
             <AnimatePresence mode="wait">
               {running && hint ? (
-                <motion.div
+                <m.div
                   key={hint}
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -276,7 +276,7 @@ export function ChallengeStage({
                   <p className="font-mono text-xs text-bone sm:text-sm">
                     <span className="text-acid">→</span> {hint}
                   </p>
-                </motion.div>
+                </m.div>
               ) : null}
             </AnimatePresence>
           </div>
@@ -289,14 +289,14 @@ export function ChallengeStage({
 
           <AnimatePresence>
             {celebrate ? (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
                 className="absolute inset-0 z-30 flex items-center justify-center bg-ink/85"
               >
-                <motion.div
+                <m.div
                   initial={{ scale: 0.7, rotate: -3, opacity: 0 }}
                   animate={{ scale: 1, rotate: 0, opacity: 1 }}
                   exit={{ scale: 0.92, opacity: 0 }}
@@ -307,13 +307,13 @@ export function ChallengeStage({
                   <p className="mt-1 font-[family-name:var(--font-display-loaded)] text-6xl italic text-acid sm:text-7xl">
                     {word}
                   </p>
-                </motion.div>
-              </motion.div>
+                </m.div>
+              </m.div>
             ) : null}
           </AnimatePresence>
         </div>
       </div>
-    </motion.main>
+    </m.main>
   );
 }
 
@@ -335,7 +335,7 @@ function MemoryLeftPanel({
       {/* Big target letter — fills the upper area */}
       <div className="flex flex-1 items-center justify-center overflow-hidden px-2 py-2 sm:py-3">
         <AnimatePresence mode="wait">
-          <motion.div
+          <m.div
             key={letter}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -347,7 +347,7 @@ function MemoryLeftPanel({
               size="xl"
               className="text-[40vw] leading-none text-bone sm:text-[28vw] lg:text-[22vw] xl:text-[20rem]"
             />
-          </motion.div>
+          </m.div>
         </AnimatePresence>
       </div>
 
@@ -361,7 +361,7 @@ function MemoryLeftPanel({
             const locking = isCurrent && confidence >= 0.999;
             return (
               <div key={i} className="flex flex-col items-center gap-1.5">
-                <motion.span
+                <m.span
                   animate={locking ? { scale: [1, 1.08, 1] } : { scale: 1 }}
                   transition={
                     locking
@@ -374,9 +374,9 @@ function MemoryLeftPanel({
                   )}
                 >
                   {ch}
-                </motion.span>
+                </m.span>
                 <span className="relative block h-[2px] w-6 bg-rule sm:w-8">
-                  <motion.span
+                  <m.span
                     className={cn("absolute inset-y-0 left-0", isCurrent ? "bg-acid" : "bg-bone-3")}
                     animate={{ width: `${fill * 100}%` }}
                     transition={{ duration: 0.12, ease: "linear" }}
@@ -451,7 +451,7 @@ function CertificateEarned({
   };
 
   return (
-    <motion.main {...STAGE_MOTION} className="flex min-h-svh flex-col bg-ink">
+    <m.main {...STAGE_MOTION} className="flex min-h-svh flex-col bg-ink">
       <header className="ruled-b">
         <div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-4 sm:px-6">
           <SpellhandMark href="/" />
@@ -460,25 +460,25 @@ function CertificateEarned({
       </header>
 
       <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-4 py-10 sm:px-6 sm:py-16">
-        <motion.p
+        <m.p
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
           className="caption-acid"
         >
           {t("earned_eyebrow", { pct: accuracy })}
-        </motion.p>
-        <motion.h1
+        </m.p>
+        <m.h1
           initial={{ opacity: 0, y: 16, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ delay: 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="mt-4 font-[family-name:var(--font-display-loaded)] text-5xl italic leading-[0.95] sm:text-7xl"
         >
           {t("earned_title")}
-        </motion.h1>
+        </m.h1>
 
         {/* Live preview certificate */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 24, scale: 1.05, rotate: -1.5 }}
           animate={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
           transition={{ delay: 0.35, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
@@ -501,11 +501,11 @@ function CertificateEarned({
               {tHero("cert_subtitle")}
             </p>
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Claim form */}
         {!sent ? (
-          <motion.form
+          <m.form
             onSubmit={handleSubmit}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -552,9 +552,9 @@ function CertificateEarned({
             >
               {t("play_again_link")}
             </button>
-          </motion.form>
+          </m.form>
         ) : (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -590,10 +590,10 @@ function CertificateEarned({
               </button>
             </div>
             {error ? <p className="caption mt-2 text-blood">{error}</p> : null}
-          </motion.div>
+          </m.div>
         )}
       </div>
-    </motion.main>
+    </m.main>
   );
 }
 

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 import { SpellhandMark } from "@/components/marks/spellhand-mark";
 
@@ -77,26 +77,26 @@ export function CertificateView({
       </header>
 
       <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-4 py-10 sm:px-6 sm:py-16">
-        <motion.p
+        <m.p
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
           className="caption-acid"
         >
           {t("awarded_on", { date: dateLabel.toUpperCase() })}
-        </motion.p>
+        </m.p>
 
-        <motion.h1
+        <m.h1
           initial={{ opacity: 0, y: 16, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ delay: 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="mt-3 font-[family-name:var(--font-display-loaded)] text-4xl italic leading-[0.95] sm:text-6xl"
         >
           {displayName}
-        </motion.h1>
+        </m.h1>
 
         {/* The certificate */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 24, scale: 1.05, rotate: -1.5 }}
           animate={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
           transition={{ delay: 0.35, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
@@ -125,9 +125,9 @@ export function CertificateView({
             </p>
             <p className="caption mt-3 text-bone-3 sm:mt-4">{dateLabel}</p>
           </div>
-        </motion.div>
+        </m.div>
 
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.9, duration: 0.5 }}
@@ -155,7 +155,7 @@ export function CertificateView({
           <Link href="/" className="caption hover:text-acid">
             {t("home")}
           </Link>
-        </motion.div>
+        </m.div>
       </div>
     </main>
   );

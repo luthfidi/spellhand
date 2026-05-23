@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import { useTranslations } from "next-intl";
 import { LEVELS, type LevelNumber } from "@/lib/levels";
 import { LETTER_BY_CODE } from "@/lib/letters";
@@ -24,7 +24,7 @@ export function LevelIntroStage({
   const blurb = tLevels(`${lv.number}_blurb`);
 
   return (
-    <motion.main {...STAGE_MOTION} className="min-h-svh bg-ink">
+    <m.main {...STAGE_MOTION} className="min-h-svh bg-ink">
       <header className="ruled-b">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-2 sm:px-6">
           <SpellhandMark href="/" />
@@ -54,7 +54,7 @@ export function LevelIntroStage({
             const meta = LETTER_BY_CODE[code];
             const isNew = newSet.has(code);
             return (
-              <motion.div
+              <m.div
                 key={code}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -76,13 +76,13 @@ export function LevelIntroStage({
                 {isNew ? (
                   <span className="caption-acid absolute right-1 top-1 text-[9px]">{t("new_tag")}</span>
                 ) : null}
-              </motion.div>
+              </m.div>
             );
           })}
         </div>
 
         <div className="mt-12 flex flex-col items-start gap-4 sm:mt-16">
-          <motion.button
+          <m.button
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35, duration: 0.5 }}
@@ -95,12 +95,12 @@ export function LevelIntroStage({
             <span aria-hidden className="text-lg transition-transform group-hover:translate-x-1 sm:text-xl">
               →
             </span>
-          </motion.button>
+          </m.button>
           <p className="text-xs text-bone-3 sm:text-sm">
             {t("footnote", { count: lv.words.length })}
           </p>
         </div>
       </div>
-    </motion.main>
+    </m.main>
   );
 }

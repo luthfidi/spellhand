@@ -4,7 +4,15 @@
     "title_template": "%s · Spellhand",
     "description": "Learn the American Sign Language fingerspelling alphabet with your camera. A specimen-by-specimen field guide, built mobile-first.",
     "og_title": "Spellhand",
-    "og_description": "A specimen catalogue of the ASL fingerspelling alphabet. Learn with your camera."
+    "og_description": "A specimen catalogue of the ASL fingerspelling alphabet. Learn with your camera.",
+    "levels_title": "Levels",
+    "levels_description": "Pick a level and start practicing the ASL fingerspelling alphabet with your camera. Four progressive levels plus a final memory Challenge.",
+    "challenge_title": "Challenge",
+    "challenge_description": "The final exam. Spell every word from memory — no reference image — to earn your shareable Spellhand certificate.",
+    "play_title": "Level {level}",
+    "play_description": "Practice the Level {level} letters of the ASL alphabet with live in-browser hand tracking and per-finger feedback.",
+    "practice_title": "Practice {letter}",
+    "practice_description": "Learn the ASL fingerspelling shape for the letter {letter} ({nato}). Live in-browser camera feedback with per-finger guidance."
   },
   "hero": {
     "made_by": "made by luthfidi",

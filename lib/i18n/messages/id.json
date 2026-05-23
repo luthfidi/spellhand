@@ -4,7 +4,15 @@
     "title_template": "%s · Spellhand",
     "description": "Belajar abjad isyarat ASL pakai kamera ponselmu. Panduan huruf-per-huruf, dirancang mobile-first.",
     "og_title": "Spellhand",
-    "og_description": "Katalog abjad isyarat ASL. Belajar pakai kamera."
+    "og_description": "Katalog abjad isyarat ASL. Belajar pakai kamera.",
+    "levels_title": "Level",
+    "levels_description": "Pilih level dan mulai latihan abjad isyarat ASL pakai kamera. Empat level progresif plus Challenge memori di akhir.",
+    "challenge_title": "Challenge",
+    "challenge_description": "Ujian akhir. Eja setiap kata dari ingatan — tanpa gambar referensi — untuk dapat sertifikat Spellhand yang shareable.",
+    "play_title": "Level {level}",
+    "play_description": "Latihan huruf Level {level} dari abjad ASL dengan hand tracking live di browser dan feedback per jari.",
+    "practice_title": "Latihan {letter}",
+    "practice_description": "Pelajari bentuk fingerspelling ASL untuk huruf {letter} ({nato}). Feedback kamera live di browser dengan panduan per jari."
   },
   "hero": {
     "made_by": "dibuat oleh luthfidi",

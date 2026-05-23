@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { m, AnimatePresence } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 import { translateHint } from "@/lib/i18n/hints";
 import type { Locale } from "@/lib/i18n/config";
@@ -188,7 +188,7 @@ export function PlayStage({
   }
 
   return (
-    <motion.main {...STAGE_MOTION} className="flex h-svh flex-col overflow-hidden bg-ink">
+    <m.main {...STAGE_MOTION} className="flex h-svh flex-col overflow-hidden bg-ink">
       <SubCheckPanel target={targetLetter} subChecks={subChecks} confidence={confidence} />
 
       <header className="ruled-b sticky top-0 z-30 bg-ink/85 backdrop-blur-sm">
@@ -265,7 +265,7 @@ export function PlayStage({
 
           <AnimatePresence>
             {running && skipOffered && !celebrate ? (
-              <motion.button
+              <m.button
                 key="skip"
                 initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -275,7 +275,7 @@ export function PlayStage({
                 className="hairline absolute left-1/2 top-4 z-20 -translate-x-1/2 rounded-full bg-ink/85 px-4 py-1.5 font-mono text-[11px] text-bone-2 backdrop-blur-sm transition-colors hover:text-acid sm:text-xs"
               >
                 {t("skip_letter")} <span aria-hidden>→</span>
-              </motion.button>
+              </m.button>
             ) : null}
           </AnimatePresence>
 
@@ -287,7 +287,7 @@ export function PlayStage({
           >
             <AnimatePresence mode="wait">
               {running && hint ? (
-                <motion.div
+                <m.div
                   key={hint}
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -298,7 +298,7 @@ export function PlayStage({
                   <p className="font-mono text-xs text-bone sm:text-sm">
                     <span className="text-acid">→</span> {hint}
                   </p>
-                </motion.div>
+                </m.div>
               ) : null}
             </AnimatePresence>
           </div>
@@ -312,14 +312,14 @@ export function PlayStage({
 
           <AnimatePresence>
             {celebrate ? (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
                 className="absolute inset-0 z-30 flex items-center justify-center bg-ink/85"
               >
-                <motion.div
+                <m.div
                   initial={{ scale: 0.7, rotate: -3, opacity: 0 }}
                   animate={{ scale: 1, rotate: 0, opacity: 1 }}
                   exit={{ scale: 0.92, opacity: 0 }}
@@ -330,13 +330,13 @@ export function PlayStage({
                   <p className="mt-1 font-[family-name:var(--font-display-loaded)] text-6xl italic text-acid sm:text-7xl">
                     {word}
                   </p>
-                </motion.div>
-              </motion.div>
+                </m.div>
+              </m.div>
             ) : null}
           </AnimatePresence>
         </div>
       </div>
-    </motion.main>
+    </m.main>
   );
 }
 
@@ -364,7 +364,7 @@ function LevelComplete({
   const isLast = levelNumber >= 4;
 
   return (
-    <motion.main {...STAGE_MOTION} className="flex min-h-svh flex-col bg-ink">
+    <m.main {...STAGE_MOTION} className="flex min-h-svh flex-col bg-ink">
       <header className="ruled-b">
         <div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-4 sm:px-6">
           <button onClick={onAllLevels} className="caption hover:text-acid">
@@ -376,22 +376,22 @@ function LevelComplete({
       </header>
 
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center justify-center px-4 py-12 text-center sm:px-6">
-        <motion.p
+        <m.p
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
           className="caption-acid"
         >
           {t("result")}
-        </motion.p>
-        <motion.h1
+        </m.p>
+        <m.h1
           initial={{ opacity: 0, y: 16, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ delay: 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="mt-4 font-[family-name:var(--font-display-loaded)] text-6xl italic leading-[0.95] sm:text-8xl"
         >
           {t("well_done")}
-        </motion.h1>
+        </m.h1>
 
         <div className="ruled-y mt-12 grid w-full grid-cols-3 divide-x divide-rule">
           <AnimatedStat label={t("stat_words")} value={wordCount} delay={0.35} />
@@ -399,7 +399,7 @@ function LevelComplete({
           <AnimatedStat label={t("stat_accuracy")} value={accuracy} suffix="%" delay={0.65} />
         </div>
 
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.9, duration: 0.5 }}
@@ -426,9 +426,9 @@ function LevelComplete({
           <button onClick={onAllLevels} className="caption hover:text-acid">
             {t("all_levels")}
           </button>
-        </motion.div>
+        </m.div>
       </div>
-    </motion.main>
+    </m.main>
   );
 }
 
@@ -462,7 +462,7 @@ function AnimatedStat({
   }, [value, delay]);
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.4 }}
@@ -473,7 +473,7 @@ function AnimatedStat({
         {display}
         {suffix}
       </p>
-    </motion.div>
+    </m.div>
   );
 }
 

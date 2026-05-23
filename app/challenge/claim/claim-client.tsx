@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import { useTranslations } from "next-intl";
 import { issueCertificate } from "@/app/_actions/cert";
 import { SpellhandMark } from "@/components/marks/spellhand-mark";
@@ -47,7 +47,7 @@ export function ClaimClient({ displayName }: { displayName: string }) {
 
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center px-4 py-12 text-center sm:px-6">
         {status === "issuing" ? (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
@@ -60,7 +60,7 @@ export function ClaimClient({ displayName }: { displayName: string }) {
             <div className="mt-2 h-[2px] w-40 overflow-hidden bg-rule">
               <div className="h-full w-1/3 animate-sweep bg-acid" />
             </div>
-          </motion.div>
+          </m.div>
         ) : null}
 
         {status === "missing-name" ? (

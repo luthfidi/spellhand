@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import { useTranslations } from "next-intl";
 import { CHALLENGE, LEVELS, LEVEL_NUMBERS, type LevelNumber } from "@/lib/levels";
 import { SpellhandMark } from "@/components/marks/spellhand-mark";
@@ -24,7 +24,7 @@ export function LevelSelectStage({
 }) {
   const t = useTranslations("level_select");
   return (
-    <motion.main {...STAGE_MOTION} className="flex h-svh flex-col overflow-hidden bg-ink">
+    <m.main {...STAGE_MOTION} className="flex h-svh flex-col overflow-hidden bg-ink">
       <header className="ruled-b shrink-0">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-2 sm:px-6">
           <SpellhandMark href="/" />
@@ -44,7 +44,7 @@ export function LevelSelectStage({
           {LEVEL_NUMBERS.map((n, idx) => {
             const lv = LEVELS[n];
             return (
-              <motion.button
+              <m.button
                 key={n}
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -67,14 +67,14 @@ export function LevelSelectStage({
                   <p className="caption truncate text-bone-2">+{lv.newLetters.join(" ")}</p>
                   <span className="caption-acid">→</span>
                 </div>
-              </motion.button>
+              </m.button>
             );
           })}
         </div>
       </section>
 
       {/* Challenge — wider, distinct, fills the lower portion */}
-      <motion.button
+      <m.button
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.45, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
@@ -100,7 +100,7 @@ export function LevelSelectStage({
         <span aria-hidden className="absolute right-6 bottom-4 text-acid sm:right-10 sm:bottom-6">
           →
         </span>
-      </motion.button>
+      </m.button>
 
       {/* Hand toggle footer */}
       <div className="shrink-0">
@@ -110,6 +110,6 @@ export function LevelSelectStage({
           </button>
         </div>
       </div>
-    </motion.main>
+    </m.main>
   );
 }

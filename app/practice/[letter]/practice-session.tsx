@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "motion/react";
+import { m, AnimatePresence } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 import { translateHint } from "@/lib/i18n/hints";
 import type { Locale } from "@/lib/i18n/config";
@@ -190,7 +190,7 @@ export function PracticeSession({ meta }: { meta: LetterMeta }) {
           >
             <AnimatePresence mode="wait">
               {running && hint ? (
-                <motion.div
+                <m.div
                   key={hint}
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -201,7 +201,7 @@ export function PracticeSession({ meta }: { meta: LetterMeta }) {
                   <p className="font-mono text-xs text-bone sm:text-sm">
                     <span className="text-acid">→</span> {hint}
                   </p>
-                </motion.div>
+                </m.div>
               ) : null}
             </AnimatePresence>
           </div>
@@ -247,7 +247,7 @@ function PracticeReferencePanel({
       <div className="flex flex-1 items-center justify-center gap-1 overflow-hidden px-2 py-2 sm:gap-2 sm:px-3 sm:py-3">
         <div className="relative flex h-full flex-[2.2] items-center justify-center">
           <AnimatePresence mode="wait">
-            <motion.div
+            <m.div
               key={letter}
               initial={{ opacity: 0, scale: 0.97 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -259,13 +259,13 @@ function PracticeReferencePanel({
               <div className="flex min-h-0 w-full flex-1 items-center justify-center p-3 sm:p-0">
                 <LocalisedLetterImage letter={letter} mirror={mirror} />
               </div>
-            </motion.div>
+            </m.div>
           </AnimatePresence>
         </div>
 
         <div className="flex flex-1 items-center justify-center">
           <AnimatePresence mode="wait">
-            <motion.div
+            <m.div
               key={letter}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
@@ -277,7 +277,7 @@ function PracticeReferencePanel({
                 size="xl"
                 className="text-[20vw] leading-none text-bone sm:text-[15vw] lg:text-[12vw] xl:text-[12rem]"
               />
-            </motion.div>
+            </m.div>
           </AnimatePresence>
         </div>
       </div>
@@ -317,7 +317,7 @@ function EdgeArrow({
   const initialX = side === "left" ? -40 : 40;
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, x: initialX }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: initialX }}
@@ -340,7 +340,7 @@ function EdgeArrow({
           {side === "left" ? "←" : "→"}
         </span>
       </Link>
-    </motion.div>
+    </m.div>
   );
 }
 
