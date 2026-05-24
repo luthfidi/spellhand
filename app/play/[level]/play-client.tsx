@@ -27,7 +27,7 @@ export function PlayClient({ level }: { level: LevelNumber }) {
         else router.push("/");
       }}
       onAllLevels={() => router.push("/levels")}
-      onFinish={() => router.push("/")}
+      onFinish={() => router.push("/challenge")}
     />
   );
 }
