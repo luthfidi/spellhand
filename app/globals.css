@@ -60,6 +60,19 @@
     outline-offset: 2px;
   }
 
+  /* Browsers (and Tailwind Preflight) leave <button> at the default arrow
+     cursor — only <a href> gets a pointer. Restore the hand cursor on every
+     interactive button; disabled ones stay default to signal they're inert. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [role="button"][aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+
   /* Hide scrollbars on overflow utilities while keeping scroll */
   .scrollbar-hidden {
     scrollbar-width: none;

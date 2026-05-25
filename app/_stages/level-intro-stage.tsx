@@ -44,12 +44,12 @@ export function LevelIntroStage({
           {blurb}
         </p>
 
-        <div className="ruled-y -mx-px mt-12">
+        <div className="ruled-t -mx-px mt-12">
           <div className="caption ml-px py-3 text-bone-3">
             {t("pool_caption", { count: lv.pool.length })}
           </div>
         </div>
-        <div className="grid grid-cols-6 -mx-px sm:grid-cols-8 lg:grid-cols-12 [&>*]:border-l [&>*]:border-b [&>*]:border-rule [&>*]:-ml-px [&>*]:-mb-px">
+        <div className="grid grid-cols-6 -mx-px border-l border-t border-rule sm:grid-cols-8 lg:grid-cols-12 [&>*]:border-b [&>*]:border-r [&>*]:border-rule">
           {lv.pool.map((code, i) => {
             const meta = LETTER_BY_CODE[code];
             const isNew = newSet.has(code);
