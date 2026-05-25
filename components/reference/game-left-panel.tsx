@@ -46,7 +46,7 @@ export function GameLeftPanel({
                 </p>
               ) : null}
               <div className="flex min-h-0 w-full flex-1 items-center justify-center p-3 sm:p-0">
-                <LetterImage letter={letter} mirror={mirror} />
+                <LetterImage letter={letter} mirror={mirror} priority />
               </div>
             </m.div>
           </AnimatePresence>

@@ -14,12 +14,19 @@ interface LetterImageProps {
   mirror?: boolean;
   /** Override the default English alt text (e.g. for localisation). */
   alt?: string;
+  /**
+   * Set when this image is the above-the-fold reference (play / practice
+   * stage) so the browser fetches it eagerly with high priority — it's the
+   * LCP element there. Leave false for off-screen / secondary uses.
+   */
+  priority?: boolean;
 }
 
 export function LetterImage({
   letter,
   mirror = false,
   alt,
+  priority = false,
 }: LetterImageProps) {
   const [errored, setErrored] = useState(false);
   const effectiveMirror = INVERTED_LETTERS.has(letter) ? !mirror : mirror;
@@ -48,6 +55,9 @@ export function LetterImage({
       src={letterImageSrc(letter)}
       alt={alt ?? `Hand shape for the letter ${letter}`}
       onError={() => setErrored(true)}
+      loading={priority ? "eager" : "lazy"}
+      fetchPriority={priority ? "high" : "auto"}
+      decoding="async"
       className="max-h-[22vh] max-w-[55vw] object-contain [filter:invert(0.97)_sepia(0.08)_saturate(0.4)] [width:auto] [height:auto] sm:max-h-full sm:max-w-full"
       style={style}
       draggable={false}

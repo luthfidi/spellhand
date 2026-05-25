@@ -296,7 +296,7 @@ function PalmAwayNote() {
 
 function LocalisedLetterImage({ letter, mirror }: { letter: LetterCode; mirror: boolean }) {
   const t = useTranslations("practice");
-  return <LetterImage letter={letter} mirror={mirror} alt={t("letter_alt", { letter })} />;
+  return <LetterImage letter={letter} mirror={mirror} alt={t("letter_alt", { letter })} priority />;
 }
 
 /* ────────────── Edge arrows (prev / next) ────────────── */

@@ -28,6 +28,15 @@ const nextConfig = {
           },
         ],
       },
+      {
+        // The SW must be re-validated on every load so a new version ships
+        // promptly — never let the browser serve a stale sw.js from cache.
+        source: "/sw.js",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=0, must-revalidate" },
+          { key: "Service-Worker-Allowed", value: "/" },
+        ],
+      },
     ];
   },
 };

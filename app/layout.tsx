@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { MotionProvider } from "@/components/motion-provider";
+import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import "./globals.css";
 
 const display = Instrument_Serif({
@@ -79,6 +80,7 @@ export default async function RootLayout({
             <ErrorBoundary>{children}</ErrorBoundary>
           </MotionProvider>
         </NextIntlClientProvider>
+        <ServiceWorkerRegister />
       </body>
     </html>
   );

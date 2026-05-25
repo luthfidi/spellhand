@@ -48,9 +48,9 @@ export const config = {
     /*
      * Run on every path except:
      *  - Next internal assets (_next/static, _next/image)
-     *  - Static files (favicon, icon, letter SVGs)
+     *  - Static files (favicon, icon, service worker, letter SVGs)
      *  - Public images
      */
-    "/((?!_next/static|_next/image|favicon.ico|icon.svg|letters/).*)",
+    "/((?!_next/static|_next/image|favicon.ico|icon.svg|sw.js|letters/).*)",
   ],
 };
