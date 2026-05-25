@@ -5,6 +5,7 @@ import { m, AnimatePresence } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 import { translateHint } from "@/lib/i18n/hints";
 import type { Locale } from "@/lib/i18n/config";
+import { LocaleToggle } from "@/components/locale-toggle";
 import { LandmarkOverlay } from "@/components/camera/landmark-overlay";
 import { CameraGate } from "@/components/camera/camera-gate";
 import { GameLeftPanel } from "@/components/reference/game-left-panel";
@@ -192,14 +193,17 @@ export function PlayStage({
       <SubCheckPanel target={targetLetter} subChecks={subChecks} confidence={confidence} />
 
       <header className="ruled-b sticky top-0 z-30 bg-ink/85 backdrop-blur-sm">
-        <div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <button onClick={onBack} className="caption hover:text-acid">
+        <div className="mx-auto grid h-12 max-w-6xl grid-cols-3 items-center px-4 sm:px-6">
+          <button onClick={onBack} className="caption justify-self-start hover:text-acid">
             {t("back")}
           </button>
-          <span className="caption">
-            {t("word_label", { current: pad2(wordIndex + 1), total: pad2(level.words.length) })}
-          </span>
-          <span className="caption text-bone-3">L{level.number}</span>
+          <div className="flex items-center justify-center gap-2 justify-self-center">
+            <span className="caption">
+              {t("word_label", { current: pad2(wordIndex + 1), total: pad2(level.words.length) })}
+            </span>
+            <span className="caption text-bone-3">L{level.number}</span>
+          </div>
+          <LocaleToggle className="justify-self-end" />
         </div>
       </header>
 
