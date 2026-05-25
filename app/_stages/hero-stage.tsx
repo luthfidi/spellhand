@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { SpellhandMark } from "@/components/marks/spellhand-mark";
 import { SpecimenSheet } from "@/components/specimen/specimen-sheet";
 import { LocaleToggle } from "@/components/locale-toggle";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { STAGE_MOTION } from "./stage-motion";
 
 export function HeroStage() {
@@ -20,15 +21,23 @@ export function HeroStage() {
       {/* Edition strip */}
       <div className="ruled-b">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-3 py-2 sm:px-6">
-          <SpellhandMark />
+          {/* Compact "S" on phones reclaims the width the toggles need. */}
+          <span className="sm:hidden">
+            <SpellhandMark compact />
+          </span>
+          <span className="hidden sm:inline-flex">
+            <SpellhandMark />
+          </span>
           <m.div
             initial={{ opacity: 0, x: 8 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 1.1, duration: 0.5 }}
             className="flex items-center gap-3 sm:gap-4"
           >
+            <ThemeToggle />
+            <span aria-hidden className="hidden text-bone-3 sm:inline">·</span>
             <LocaleToggle />
-            <span aria-hidden className="text-bone-3">·</span>
+            <span aria-hidden className="hidden text-bone-3 sm:inline">·</span>
             <a
               href="https://github.com/luthfidi"
               target="_blank"

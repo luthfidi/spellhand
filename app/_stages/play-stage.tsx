@@ -193,17 +193,25 @@ export function PlayStage({
       <SubCheckPanel target={targetLetter} subChecks={subChecks} confidence={confidence} />
 
       <header className="ruled-b sticky top-0 z-30 bg-ink/85 backdrop-blur-sm">
-        <div className="mx-auto grid h-12 max-w-6xl grid-cols-3 items-center px-4 sm:px-6">
-          <button onClick={onBack} className="caption justify-self-start hover:text-acid">
+        {/* justify-between (not a 3-col grid): the centred WORD/level group can
+            be wider than a third of the bar on mobile, so equal columns made it
+            collide with BACK / the toggle. Natural widths + space-between keeps
+            it visually centred (BACK ≈ the toggle) without overlap. */}
+        <div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-4 sm:px-6">
+          <button onClick={onBack} className="caption hover:text-acid">
             {t("back")}
           </button>
-          <div className="flex items-center justify-center gap-2 justify-self-center">
+          <div className="flex items-center gap-2">
             <span className="caption">
               {t("word_label", { current: pad2(wordIndex + 1), total: pad2(level.words.length) })}
             </span>
             <span className="caption text-bone-3">L{level.number}</span>
           </div>
-          <LocaleToggle className="justify-self-end" />
+          {/* Theme lives only on the menu screens (Home / Levels) — during a
+              drill the language toggle is what matters (a learner who can't read
+              the English hints needs to switch mid-play), and keeping it alone
+              avoids the navbar colliding with the centred WORD / level on mobile. */}
+          <LocaleToggle />
         </div>
       </header>
 
@@ -224,6 +232,7 @@ export function PlayStage({
         </div>
 
         <div
+          data-theme="dark"
           className={cn(
             "relative overflow-hidden bg-black",
             hand === "right" ? "lg:order-2" : "lg:order-1",

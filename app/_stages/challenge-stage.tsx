@@ -10,6 +10,7 @@ import { CameraGate } from "@/components/camera/camera-gate";
 import { SubCheckPanel } from "@/components/debug/sub-check-panel";
 import { ConfidenceDisplay } from "@/components/feedback/confidence-display";
 import { LockedRing } from "@/components/feedback/locked-ring";
+import { LocaleToggle } from "@/components/locale-toggle";
 import { LetterGlyph } from "@/components/specimen/letter-glyph";
 import { SpellhandMark } from "@/components/marks/spellhand-mark";
 import { useHandLandmarker } from "@/lib/mediapipe/use-hand-landmarker";
@@ -177,7 +178,13 @@ export function ChallengeStage({
           <span className="caption">
             {t("word_label", { current: pad2(wordIndex + 1), total: pad2(CHALLENGE.words.length) })}
           </span>
-          <span className="caption-acid">{t("challenge_label")}</span>
+          {/* Language stays reachable mid-challenge (English hints); the
+              CHALLENGE mode tag is decorative, so it drops off on phones. */}
+          <div className="flex items-center gap-3">
+            <span className="caption-acid hidden sm:inline">{t("challenge_label")}</span>
+            <span aria-hidden className="hidden text-bone-3 sm:inline">·</span>
+            <LocaleToggle />
+          </div>
         </div>
       </header>
 
@@ -198,6 +205,7 @@ export function ChallengeStage({
         </div>
 
         <div
+          data-theme="dark"
           className={cn(
             "relative overflow-hidden bg-black",
             hand === "right" ? "lg:order-2" : "lg:order-1",

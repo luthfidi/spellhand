@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { CHALLENGE, LEVELS, LEVEL_NUMBERS, type LevelNumber } from "@/lib/levels";
 import { SpellhandMark } from "@/components/marks/spellhand-mark";
 import { LocaleToggle } from "@/components/locale-toggle";
+import { ThemeToggle } from "@/components/theme-toggle";
 import type { Hand } from "@/lib/hooks/use-hand-preference";
 import { pad2 } from "@/lib/utils";
 import { STAGE_MOTION } from "./stage-motion";
@@ -27,10 +28,18 @@ export function LevelSelectStage({
     <m.main {...STAGE_MOTION} className="flex h-svh flex-col overflow-hidden bg-ink">
       <header className="ruled-b shrink-0">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-2 sm:px-6">
-          <SpellhandMark href="/" />
+          {/* Compact "S" on phones reclaims the width the toggles need. */}
+          <span className="sm:hidden">
+            <SpellhandMark href="/" compact />
+          </span>
+          <span className="hidden sm:inline-flex">
+            <SpellhandMark href="/" />
+          </span>
           <div className="flex items-center gap-3 sm:gap-4">
+            <ThemeToggle />
+            <span aria-hidden className="hidden text-bone-3 sm:inline">·</span>
             <LocaleToggle />
-            <span aria-hidden className="text-bone-3">·</span>
+            <span aria-hidden className="hidden text-bone-3 sm:inline">·</span>
             <button onClick={onBack} className="caption hover:text-acid">
               {t("back")}
             </button>

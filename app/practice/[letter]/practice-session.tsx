@@ -14,6 +14,7 @@ import { LockedRing } from "@/components/feedback/locked-ring";
 import { LetterGlyph } from "@/components/specimen/letter-glyph";
 import { LetterImage } from "@/components/reference/letter-image";
 import { SpellhandMark } from "@/components/marks/spellhand-mark";
+import { LocaleToggle } from "@/components/locale-toggle";
 import { useHandLandmarker } from "@/lib/mediapipe/use-hand-landmarker";
 import { useHandPreference } from "@/lib/hooks/use-hand-preference";
 import { classifyAgainstTarget } from "@/lib/recognition/classify";
@@ -106,18 +107,30 @@ export function PracticeSession({ meta }: { meta: LetterMeta }) {
       {/* Compact header — wordmark + NATO + hand toggle + end */}
       <header className="ruled-b sticky top-0 z-30 bg-ink/85 backdrop-blur-sm">
         <div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <SpellhandMark href="/" />
-          <span className="caption">
+          {/* Compact "S" on phones — the count + controls need the width. */}
+          <span className="sm:hidden">
+            <SpellhandMark href="/" compact />
+          </span>
+          <span className="hidden sm:inline-flex">
+            <SpellhandMark href="/" />
+          </span>
+          {/* Drop the NATO word on phones (locale-neutral short form) so the
+              language toggle + END fit. Full count returns at sm+. */}
+          <span className="caption sm:hidden">§ {pad2(meta.index)} / 24</span>
+          <span className="caption hidden sm:inline">
             {t("header_count", { index: pad2(meta.index), nato: meta.nato.toUpperCase() })}
           </span>
           <div className="flex items-center gap-3 sm:gap-5">
+            {/* Hidden on phones to keep the bar from overflowing; the hand
+                preference is still adjustable from the Levels modal. */}
             <button
               onClick={() => setHand(hand === "right" ? "left" : "right")}
-              className="caption hover:text-acid"
+              className="caption hidden hover:text-acid sm:inline"
               aria-label={t("toggle_hand_label")}
             >
               {hand === "right" ? t("right_handed") : t("left_handed")}
             </button>
+            <LocaleToggle />
             <Link href="/" className="caption hover:text-acid">
               {t("end")}
             </Link>
@@ -139,6 +152,7 @@ export function PracticeSession({ meta }: { meta: LetterMeta }) {
 
         {/* Camera */}
         <div
+          data-theme="dark"
           className={cn(
             "relative overflow-hidden bg-black",
             hand === "right" ? "lg:order-2" : "lg:order-1",

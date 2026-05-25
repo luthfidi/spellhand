@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Instrument_Serif, IBM_Plex_Mono } from "next/font/google";
+import { cookies } from "next/headers";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
+import { THEME_COOKIE, isTheme } from "@/lib/theme";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { MotionProvider } from "@/components/motion-provider";
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
@@ -52,8 +54,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#1a1612",
-  colorScheme: "dark",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#1a1612" },
+    { media: "(prefers-color-scheme: light)", color: "#f5f0e6" },
+  ],
+  colorScheme: "light dark",
   width: "device-width",
   initialScale: 1,
 };
@@ -65,9 +70,15 @@ export default async function RootLayout({
 }) {
   const locale = await getLocale();
   const messages = await getMessages();
+  const themeCookie = (await cookies()).get(THEME_COOKIE)?.value;
+  const theme = isTheme(themeCookie) ? themeCookie : undefined;
 
   return (
-    <html lang={locale} className={`${display.variable} ${mono.variable}`}>
+    <html
+      lang={locale}
+      className={`${display.variable} ${mono.variable}`}
+      data-theme={theme}
+    >
       <head>
         {/* MediaPipe model + WASM live on these CDNs. Establishing the TLS
             handshake early shaves ~100–300ms off the first /play visit. */}

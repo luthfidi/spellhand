@@ -58,7 +58,7 @@ export function LetterImage({
       loading={priority ? "eager" : "lazy"}
       fetchPriority={priority ? "high" : "auto"}
       decoding="async"
-      className="max-h-[22vh] max-w-[55vw] object-contain [filter:invert(0.97)_sepia(0.08)_saturate(0.4)] [width:auto] [height:auto] sm:max-h-full sm:max-w-full"
+      className="max-h-[22vh] max-w-[55vw] object-contain [filter:var(--img-reference-filter)] [width:auto] [height:auto] sm:max-h-full sm:max-w-full"
       style={style}
       draggable={false}
     />

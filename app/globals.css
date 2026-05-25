@@ -36,6 +36,77 @@
 @layer base {
   :root {
     color-scheme: dark;
+    /* Reference hand art is black line-work; on dark we invert it to warm
+       off-white. The light theme overrides this to keep it dark on cream. */
+    --img-reference-filter: invert(0.97) sepia(0.08) saturate(0.4);
+  }
+
+  /* Light mode — same warm editorial language as dark: a soft "paper" canvas
+     (toned down from pure cream so it's easy on the eyes), warm near-black
+     text, a deeper lime, and a dark reference filter. Tokens are semantic
+     (ink = canvas, bone = text), so flipping them cascades through every
+     utility without touching components.
+
+     Reached two ways:
+       1. No explicit choice → follow the device (:root:not([data-theme])).
+       2. User picked Light  → [data-theme="light"] overrides the device.
+     The [data-theme] selectors are element-level (not :root-only) on purpose:
+     the camera region opts back into dark via [data-theme="dark"] regardless
+     of the page theme, since it always shows a dark video feed. */
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme]) {
+      color-scheme: light;
+      --color-ink: oklch(0.945 0.013 85);
+      --color-ink-2: oklch(0.91 0.014 85);
+      --color-ink-3: oklch(0.875 0.016 85);
+      --color-rule: oklch(0.56 0.020 70);
+      --color-rule-soft: oklch(0.72 0.016 65);
+      --color-bone: oklch(0.23 0.020 60);
+      --color-bone-2: oklch(0.33 0.022 60);
+      --color-bone-3: oklch(0.45 0.018 65);
+      --color-acid: oklch(0.57 0.165 130);
+      --color-acid-dim: oklch(0.72 0.130 128);
+      --color-blood: oklch(0.55 0.205 25);
+      --color-amber: oklch(0.66 0.150 75);
+      --img-reference-filter: invert(0.1) sepia(0.12) saturate(0.6);
+    }
+  }
+
+  [data-theme="light"] {
+    color-scheme: light;
+    --color-ink: oklch(0.945 0.013 85);
+    --color-ink-2: oklch(0.91 0.014 85);
+    --color-ink-3: oklch(0.875 0.016 85);
+    --color-rule: oklch(0.56 0.020 70);
+    --color-rule-soft: oklch(0.72 0.016 65);
+    --color-bone: oklch(0.23 0.020 60);
+    --color-bone-2: oklch(0.33 0.022 60);
+    --color-bone-3: oklch(0.45 0.018 65);
+    --color-acid: oklch(0.57 0.165 130);
+    --color-acid-dim: oklch(0.72 0.130 128);
+    --color-blood: oklch(0.55 0.205 25);
+    --color-amber: oklch(0.66 0.150 75);
+    --img-reference-filter: invert(0.1) sepia(0.12) saturate(0.6);
+  }
+
+  /* Force dark tokens — used on the camera region so its overlays stay legible
+     over the (always-dark) video feed, and on <html> when the user picks Dark
+     while their device prefers light. Mirrors the @theme dark defaults. */
+  [data-theme="dark"] {
+    color-scheme: dark;
+    --color-ink: oklch(0.13 0.012 60);
+    --color-ink-2: oklch(0.17 0.015 60);
+    --color-ink-3: oklch(0.21 0.018 60);
+    --color-rule: oklch(0.46 0.018 70);
+    --color-rule-soft: oklch(0.36 0.015 65);
+    --color-bone: oklch(0.94 0.018 80);
+    --color-bone-2: oklch(0.88 0.020 80);
+    --color-bone-3: oklch(0.80 0.015 75);
+    --color-acid: oklch(0.89 0.215 128);
+    --color-acid-dim: oklch(0.65 0.155 128);
+    --color-blood: oklch(0.66 0.205 25);
+    --color-amber: oklch(0.80 0.155 80);
+    --img-reference-filter: invert(0.97) sepia(0.08) saturate(0.4);
   }
 
   html,
