@@ -7,6 +7,7 @@ import { SpellhandMark } from "@/components/marks/spellhand-mark";
 import { SpecimenSheet } from "@/components/specimen/specimen-sheet";
 import { LocaleToggle } from "@/components/locale-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { CertificateCard } from "@/components/certificate/certificate-card";
 import { STAGE_MOTION } from "./stage-motion";
 
 export function HeroStage() {
@@ -234,33 +235,11 @@ export function HeroStage() {
             whileHover={{ y: -4, rotate: 0.3 }}
             className="group lg:col-span-7"
           >
-            <div className="hairline relative aspect-[4/3] w-full bg-ink-2 p-4 transition-shadow duration-500 group-hover:shadow-[0_20px_60px_-20px_color-mix(in_oklab,var(--color-acid)_30%,transparent)] sm:p-10">
-              <div className="hairline-soft absolute inset-2 sm:inset-5" aria-hidden />
-              {["left-2 top-2 sm:left-3 sm:top-3", "right-2 top-2 sm:right-3 sm:top-3", "left-2 bottom-2 sm:left-3 sm:bottom-3", "right-2 bottom-2 sm:right-3 sm:bottom-3"].map((c, i) => (
-                <m.span
-                  key={c}
-                  aria-hidden
-                  initial={{ opacity: 0, scale: 0 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.4 + i * 0.08, duration: 0.4 }}
-                  className={`absolute ${c} h-1.5 w-1.5 bg-acid`}
-                />
-              ))}
-              <div className="relative flex h-full flex-col items-center justify-center px-2 text-center sm:px-0">
-                <p className="caption-acid text-[10px] sm:text-xs">{t("cert_brand")}</p>
-                <p className="mt-2 font-[family-name:var(--font-display-loaded)] text-2xl italic leading-tight sm:mt-3 sm:text-5xl">
-                  {t("cert_title_line_1")}<br />{t("cert_title_line_2")}
-                </p>
-                <p className="caption mt-4 text-bone-3 sm:mt-6">{t("cert_awarded")}</p>
-                <p className="mt-1 font-[family-name:var(--font-display-loaded)] text-lg italic text-bone-2 sm:text-2xl">
-                  {t("cert_name_placeholder")}
-                </p>
-                <p className="caption mt-4 max-w-xs text-bone-3 sm:mt-6">
-                  {t("cert_subtitle")}
-                </p>
-              </div>
-            </div>
+            <CertificateCard
+              name={t("cert_name_placeholder")}
+              nameDim
+              className="transition-shadow duration-500 group-hover:shadow-[0_20px_60px_-20px_color-mix(in_oklab,var(--color-acid)_30%,transparent)]"
+            />
           </m.div>
         </div>
       </section>

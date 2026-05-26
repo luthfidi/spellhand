@@ -11,6 +11,7 @@ import { SubCheckPanel } from "@/components/debug/sub-check-panel";
 import { ConfidenceDisplay } from "@/components/feedback/confidence-display";
 import { LockedRing } from "@/components/feedback/locked-ring";
 import { LocaleToggle } from "@/components/locale-toggle";
+import { CertificateCard } from "@/components/certificate/certificate-card";
 import { LetterGlyph } from "@/components/specimen/letter-glyph";
 import { SpellhandMark } from "@/components/marks/spellhand-mark";
 import { useHandLandmarker } from "@/lib/mediapipe/use-hand-landmarker";
@@ -485,30 +486,14 @@ function CertificateEarned({
           {t("earned_title")}
         </m.h1>
 
-        {/* Live preview certificate */}
+        {/* Live preview certificate — shared design with the cert page / PNG. */}
         <m.div
           initial={{ opacity: 0, y: 24, scale: 1.05, rotate: -1.5 }}
           animate={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
           transition={{ delay: 0.35, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          className="hairline relative mt-10 aspect-[4/3] w-full max-w-3xl bg-ink-2 p-4 sm:p-10"
+          className="mt-10 w-full max-w-3xl"
         >
-          <div className="hairline-soft absolute inset-2 sm:inset-5" aria-hidden />
-          {["left-2 top-2 sm:left-3 sm:top-3", "right-2 top-2 sm:right-3 sm:top-3", "left-2 bottom-2 sm:left-3 sm:bottom-3", "right-2 bottom-2 sm:right-3 sm:bottom-3"].map((c) => (
-            <span key={c} aria-hidden className={`absolute ${c} h-1.5 w-1.5 bg-acid`} />
-          ))}
-          <div className="relative flex h-full flex-col items-center justify-center text-center">
-            <p className="caption-acid text-[10px] sm:text-xs">{tHero("cert_brand")}</p>
-            <p className="mt-2 font-[family-name:var(--font-display-loaded)] text-2xl italic leading-tight sm:mt-3 sm:text-5xl">
-              {tHero("cert_title_line_1")}<br />{tHero("cert_title_line_2")}
-            </p>
-            <p className="caption mt-4 text-bone-3 sm:mt-6">{tHero("cert_awarded")}</p>
-            <p className="mt-1 font-[family-name:var(--font-display-loaded)] text-lg italic text-bone sm:text-3xl">
-              {display}
-            </p>
-            <p className="caption mt-4 max-w-xs text-bone-3 sm:mt-6">
-              {tHero("cert_subtitle")}
-            </p>
-          </div>
+          <CertificateCard name={display} />
         </m.div>
 
         {/* Claim form */}

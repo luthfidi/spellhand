@@ -5,6 +5,7 @@ import Link from "next/link";
 import { m } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 import { SpellhandMark } from "@/components/marks/spellhand-mark";
+import { CertificateCard } from "@/components/certificate/certificate-card";
 
 export function CertificateView({
   token,
@@ -49,7 +50,7 @@ export function CertificateView({
     if (downloading) return;
     setDownloading(true);
     try {
-      const res = await fetch(`/cert/${token}/og?lang=${locale}`);
+      const res = await fetch(`/cert/${token}/og?lang=${locale}&format=download`);
       if (!res.ok) throw new Error("Failed to generate image");
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -95,36 +96,14 @@ export function CertificateView({
           {displayName}
         </m.h1>
 
-        {/* The certificate */}
+        {/* The certificate — shared design, mirrored by the downloadable PNG. */}
         <m.div
           initial={{ opacity: 0, y: 24, scale: 1.05, rotate: -1.5 }}
           animate={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
           transition={{ delay: 0.35, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          className="hairline relative mt-10 aspect-[4/3] w-full max-w-3xl bg-ink-2 p-4 sm:p-10"
+          className="mt-10 w-full max-w-3xl"
         >
-          <div className="hairline-soft absolute inset-2 sm:inset-5" aria-hidden />
-          {[
-            "left-2 top-2 sm:left-3 sm:top-3",
-            "right-2 top-2 sm:right-3 sm:top-3",
-            "left-2 bottom-2 sm:left-3 sm:bottom-3",
-            "right-2 bottom-2 sm:right-3 sm:bottom-3",
-          ].map((c) => (
-            <span key={c} aria-hidden className={`absolute ${c} h-1.5 w-1.5 bg-acid`} />
-          ))}
-          <div className="relative flex h-full flex-col items-center justify-center px-2 text-center sm:px-0">
-            <p className="caption-acid text-[10px] sm:text-xs">{t("brand")}</p>
-            <p className="mt-2 font-[family-name:var(--font-display-loaded)] text-2xl italic leading-tight sm:mt-3 sm:text-5xl">
-              {t("title_line_1")}<br />{t("title_line_2")}
-            </p>
-            <p className="caption mt-4 text-bone-3 sm:mt-6">{t("awarded_to")}</p>
-            <p className="mt-1 font-[family-name:var(--font-display-loaded)] text-xl italic text-bone sm:text-3xl">
-              {displayName}
-            </p>
-            <p className="caption mt-4 max-w-xs text-bone-3 sm:mt-6">
-              {t("subtitle")}
-            </p>
-            <p className="caption mt-3 text-bone-3 sm:mt-4">{dateLabel}</p>
-          </div>
+          <CertificateCard name={displayName} dateLabel={dateLabel} />
         </m.div>
 
         <m.div

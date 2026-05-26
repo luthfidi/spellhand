@@ -30,9 +30,15 @@ export async function sendCertMagicLink(
 
   const supabase = await createClient();
   const h = await headers();
+  // Magic links must point at the canonical production URL, never a localhost
+  // (or preview) origin. Prefer an explicit env, then Vercel's auto-provided
+  // production domain, then the request origin, then local dev.
   const origin =
-    h.get("origin") ??
     process.env.NEXT_PUBLIC_SITE_URL ??
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : null) ??
+    h.get("origin") ??
     "http://localhost:3000";
 
   const redirect =

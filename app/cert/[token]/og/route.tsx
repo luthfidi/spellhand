@@ -1,10 +1,13 @@
 import { ImageResponse } from "next/og";
 import { createClient } from "@supabase/supabase-js";
+import en from "@/lib/i18n/messages/en.json";
+import id from "@/lib/i18n/messages/id.json";
 
 export const runtime = "edge";
 
-/* Hex approximations of the OKLCH palette used in globals.css.
- * next/og (satori) doesn't support OKLCH, so we pin sRGB equivalents. */
+/* Hex approximations of the OKLCH dark palette in globals.css (satori has no
+ * OKLCH). These mirror the `[data-theme="dark"]` tokens the on-screen
+ * CertificateCard is pinned to, so the PNG matches the card. */
 const INK = "#1c1812";
 const INK_2 = "#26211b";
 const BONE = "#ece3d4";
@@ -18,7 +21,16 @@ export async function GET(
   { params }: { params: Promise<{ token: string }> },
 ) {
   const { token } = await params;
-  const lang = new URL(req.url).searchParams.get("lang") === "id" ? "id-ID" : "en-US";
+  const searchParams = new URL(req.url).searchParams;
+  const isId = searchParams.get("lang") === "id";
+  const c = (isId ? id : en).cert;
+  const dateLocale = isId ? "id-ID" : "en-US";
+
+  // `format=download` → 4:3, matching the on-screen card. Default → 1.91:1 for
+  // social link unfurls (the OG <meta> image).
+  const download = searchParams.get("format") === "download";
+  const width = 1200;
+  const height = download ? 900 : 630;
 
   // Public view — anon read allowed by RLS, no auth cookies needed.
   const supabase = createClient(
@@ -37,11 +49,12 @@ export async function GET(
     return new Response("Certificate not found", { status: 404 });
   }
 
-  const dateLabel = new Date(data.issued_at).toLocaleDateString(lang, {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const dateLabel = new Date(data.issued_at)
+    .toLocaleDateString(dateLocale, { year: "numeric", month: "long", day: "numeric" })
+    .toUpperCase();
+
+  const nameLen = data.display_name.length;
+  const nameSize = nameLen > 28 ? 40 : nameLen > 18 ? 52 : 64;
 
   const response = new ImageResponse(
     (
@@ -89,17 +102,11 @@ export async function GET(
           ].map((pos, i) => (
             <div
               key={i}
-              style={{
-                position: "absolute",
-                width: 12,
-                height: 12,
-                backgroundColor: ACID,
-                ...pos,
-              }}
+              style={{ position: "absolute", width: 12, height: 12, backgroundColor: ACID, ...pos }}
             />
           ))}
 
-          {/* Header — wordmark */}
+          {/* Brand */}
           <div
             style={{
               display: "flex",
@@ -110,10 +117,10 @@ export async function GET(
               fontWeight: 500,
             }}
           >
-            SPELLHAND
+            {c.brand}
           </div>
 
-          {/* Title */}
+          {/* Title — two lines, serif italic (matches the card) */}
           <div
             style={{
               display: "flex",
@@ -128,13 +135,11 @@ export async function GET(
               fontFamily: "serif",
             }}
           >
-            <span style={{ display: "flex" }}>Certificate of</span>
-            <span style={{ display: "flex", marginTop: 8 }}>
-              Fingerspelling
-            </span>
+            <span style={{ display: "flex" }}>{c.title_line_1}</span>
+            <span style={{ display: "flex", marginTop: 8 }}>{c.title_line_2}</span>
           </div>
 
-          {/* awarded to */}
+          {/* awarded to (caption → uppercase on screen) */}
           <div
             style={{
               display: "flex",
@@ -145,22 +150,15 @@ export async function GET(
               marginTop: 56,
             }}
           >
-            AWARDED TO
+            {c.awarded_to.toUpperCase()}
           </div>
 
-          {/* Display name — scale down for long names to avoid overflow in
-              the 1200×630 canvas. The DB caps at 40 chars; serif italic at
-              64px fits ~18 chars comfortably. */}
+          {/* Display name — scales down for long names (DB caps at 40 chars). */}
           <div
             style={{
               display: "flex",
               color: BONE,
-              fontSize:
-                data.display_name.length > 28
-                  ? 40
-                  : data.display_name.length > 18
-                    ? 52
-                    : 64,
+              fontSize: nameSize,
               fontStyle: "italic",
               fontFamily: "serif",
               marginTop: 12,
@@ -172,23 +170,23 @@ export async function GET(
             {data.display_name}
           </div>
 
-          {/* description */}
+          {/* Subtitle (caption → uppercase on screen) */}
           <div
             style={{
               display: "flex",
               color: BONE_2,
               fontFamily: "monospace",
               fontSize: 18,
-              letterSpacing: 1,
+              letterSpacing: 2,
               marginTop: 56,
-              maxWidth: 700,
+              maxWidth: 760,
               textAlign: "center",
             }}
           >
-            for mastering the American Sign Language alphabet
+            {c.subtitle.toUpperCase()}
           </div>
 
-          {/* date */}
+          {/* Date */}
           <div
             style={{
               display: "flex",
@@ -199,19 +197,16 @@ export async function GET(
               marginTop: 24,
             }}
           >
-            {dateLabel.toUpperCase()}
+            {dateLabel}
           </div>
         </div>
       </div>
     ),
-    {
-      width: 1200,
-      height: 630,
-    },
+    { width, height },
   );
 
-  // Certificates are immutable once issued — long cache is safe. Different
-  // lang= variants are separate URLs, so the cache key is correct.
+  // Certificates are immutable once issued — long cache is safe. lang/format
+  // variants are separate URLs, so the cache key stays correct.
   response.headers.set(
     "Cache-Control",
     "public, max-age=300, s-maxage=86400, stale-while-revalidate=604800",
