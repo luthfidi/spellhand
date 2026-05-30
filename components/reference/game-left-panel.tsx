@@ -1,6 +1,7 @@
 "use client";
 
 import { m, AnimatePresence } from "motion/react";
+import { useTranslations } from "next-intl";
 import { LetterGlyph } from "@/components/specimen/letter-glyph";
 import { LetterImage } from "@/components/reference/letter-image";
 import { NEEDS_PERSPECTIVE_NOTE } from "@/lib/letter-display";
@@ -26,6 +27,7 @@ export function GameLeftPanel({
   mirror?: boolean;
   className?: string;
 }) {
+  const t = useTranslations("play");
   return (
     <div className={cn("relative flex h-full w-full flex-col bg-ink-2", className)}>
       {/* Top: hand image + letter glyph side-by-side (hand dominant) */}
@@ -42,7 +44,7 @@ export function GameLeftPanel({
             >
               {NEEDS_PERSPECTIVE_NOTE.has(letter) ? (
                 <p className="caption-acid whitespace-nowrap text-center text-sm tracking-[0.14em] sm:text-base">
-                  PALM FACES AWAY FROM CAMERA
+                  {t("palm_away")}
                 </p>
               ) : null}
               <div className="flex min-h-0 w-full flex-1 items-center justify-center p-3 sm:p-0">

@@ -6,13 +6,13 @@
     "og_title": "Spellhand",
     "og_description": "Katalog abjad isyarat ASL. Belajar pakai kamera.",
     "levels_title": "Level",
-    "levels_description": "Pilih level dan mulai latihan abjad isyarat ASL pakai kamera. Empat level progresif plus Challenge memori di akhir.",
+    "levels_description": "Pilih level dan mulai latihan abjad isyarat ASL pakai kamera. Empat level bertahap plus Tantangan memori di akhir.",
     "challenge_title": "Challenge",
-    "challenge_description": "Ujian akhir. Eja setiap kata dari ingatan — tanpa gambar referensi — untuk dapat sertifikat Spellhand yang shareable.",
+    "challenge_description": "Ujian akhir. Eja setiap kata dari ingatan — tanpa gambar referensi — untuk dapat sertifikat Spellhand yang siap dibagikan.",
     "play_title": "Level {level}",
-    "play_description": "Latihan huruf Level {level} dari abjad ASL dengan hand tracking live di browser dan feedback per jari.",
+    "play_description": "Latihan huruf Level {level} dari abjad ASL dengan pelacakan tangan langsung di browser dan umpan balik per jari.",
     "practice_title": "Latihan {letter}",
-    "practice_description": "Pelajari bentuk fingerspelling ASL untuk huruf {letter} ({nato}). Feedback kamera live di browser dengan panduan per jari."
+    "practice_description": "Pelajari bentuk isyarat ASL untuk huruf {letter} ({nato}). Umpan balik kamera langsung di browser dengan panduan per jari."
   },
   "hero": {
     "made_by": "dibuat oleh luthfidi",
@@ -21,8 +21,8 @@
     "tagline_2": "alfabet",
     "tagline_3": "pakai tangan.",
     "cta": "MULAI",
-    "privacy_note": "Kamera tetap di browser · tidak ada video diunggah",
-    "nav_how": "↓ Cara",
+    "privacy_note": "Kamera tetap di browser · video tetap di perangkatmu",
+    "nav_how": "↓ Caranya",
     "nav_catalogue": "Katalog",
     "nav_certificate": "Sertifikat",
     "section_how_eyebrow": "§ 01 · Cara kerjanya",
@@ -37,7 +37,7 @@
     "section_catalogue_title": "Dua puluh empat huruf.",
     "section_cert_eyebrow": "§ 03 · Sertifikatnya",
     "section_cert_title": "Satu hadiah.",
-    "section_cert_body": "Selesaikan Tantangan, eja semua kata dari ingatan, tanpa referensi. Satu sertifikat, bertanda dan bertanggal.",
+    "section_cert_body": "Selesaikan Tantangan, eja semua kata dari ingatan, tanpa referensi. Satu sertifikat, ditandatangani dan bertanggal.",
     "cert_brand": "SPELLHAND",
     "cert_title_line_1": "Sertifikat",
     "cert_title_line_2": "Abjad Isyarat",
@@ -47,7 +47,7 @@
     "footer_tagline": "Panduan praktis abjad isyarat ASL.",
     "footer_illustrations": "Ilustrasi",
     "footer_mediapipe": "MediaPipe",
-    "footer_inspired": "Terinspirasi dari fingerspelling.xyz",
+    "footer_inspired": "Terinspirasi oleh fingerspelling.xyz",
     "footer_practice": "Latihan per huruf",
     "footer_copy": "© Spellhand"
   },
@@ -69,7 +69,7 @@
     "pool_caption": "Kumpulan huruf · {count} huruf",
     "new_tag": "BARU",
     "cta": "NYALAKAN KAMERA",
-    "footnote": "Lihat bentuk tangannya, lalu tiru. {count} kata untuk dieja."
+    "footnote": "Lihat bentuk tangannya, lalu tiru. {count} kata yang harus dieja."
   },
   "levels": {
     "1_blurb": "Siap-siap kenal huruf A, B, C, E, L, O, V, W, U, Y.",
@@ -93,8 +93,9 @@
     "finish": "RAIH SERTIFIKAT",
     "all_levels": "← Semua level",
     "hint_place_hand": "Letakkan tangan di dalam bingkai.",
-    "hint_skipping": "Dilewati, huruf ini belum tersedia.",
-    "skip_letter": "LEWATI HURUF"
+    "hint_skipping": "Dilewati, huruf ini belum dibuka.",
+    "skip_letter": "LEWATI HURUF",
+    "palm_away": "TELAPAK MEMBELAKANGI KAMERA"
   },
   "challenge": {
     "back": "← KEMBALI",
@@ -109,9 +110,9 @@
     "email_placeholder": "kamu@email.com",
     "submit_idle": "KLAIM SERTIFIKATKU →",
     "submit_sending": "MENGIRIM…",
-    "no_password_note": "Kami kirim tautan masuk lewat email. Tanpa password.",
+    "no_password_note": "Kami kirim tautan masuk lewat email. Tanpa kata sandi.",
     "play_again_link": "← main lagi aja",
-    "sent_eyebrow": "CEK INBOX KAMU",
+    "sent_eyebrow": "CEK KOTAK MASUKMU",
     "sent_title": "Tautan masuk terkirim.",
     "sent_body_prefix": "Kami kirim tautan masuk ke",
     "sent_body_suffix": "Klik tautan itu untuk klaim sertifikatmu.",
@@ -120,7 +121,7 @@
     "resend_done": "Terkirim ulang ✓",
     "edit_email": "Pakai email lain",
     "hint_place_hand": "Letakkan tangan di dalam bingkai.",
-    "hint_skipping": "Dilewati, huruf ini belum tersedia.",
+    "hint_skipping": "Dilewati, huruf ini belum dibuka.",
     "skip_letter": "LEWATI HURUF",
     "generic_send_error": "Gagal mengirim tautan."
   },
@@ -130,9 +131,9 @@
     "left_handed": "TANGAN KIRI",
     "toggle_hand_label": "Ganti tangan dominan",
     "end": "SELESAI",
-    "prev": "SBLM",
-    "next": "BRKT",
-    "palm_away_note": "TELAPAK MENGHADAP MENJAUH DARI KAMERA",
+    "prev": "PREV",
+    "next": "NEXT",
+    "palm_away_note": "TELAPAK MEMBELAKANGI KAMERA",
     "hint_place_hand": "Letakkan tangan di dalam bingkai.",
     "letter_alt": "Bentuk tangan untuk huruf {letter}",
     "go_to_letter_label": "Ke huruf {letter}"
@@ -190,9 +191,17 @@
     "modal_label": "Pilih tangan dominanmu"
   },
   "errors": {
-    "name_required": "Mohon masukkan nama.",
-    "invalid_email": "Mohon masukkan email yang valid.",
+    "name_required": "Masukkan namamu dulu.",
+    "invalid_email": "Email-nya kurang valid.",
     "display_name_required": "Nama tampilan wajib diisi.",
     "not_authenticated": "Belum masuk."
+  },
+  "error_boundary": {
+    "eyebrow": "GANGGUAN · KESALAHAN TAK TERDUGA",
+    "title_line_1": "Ada yang",
+    "title_line_2": "rusak.",
+    "body": "Terjadi kesalahan yang tak terduga. Coba muat ulang halaman.",
+    "reload": "MUAT ULANG",
+    "try_again": "← coba lagi"
   }
 }
