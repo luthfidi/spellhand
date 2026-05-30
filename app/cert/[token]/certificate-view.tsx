@@ -77,7 +77,7 @@ export function CertificateView({
         </div>
       </header>
 
-      <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-4 py-10 sm:px-6 sm:py-16">
+      <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-4 py-4 sm:px-6 sm:py-8">
         <m.p
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -91,17 +91,20 @@ export function CertificateView({
           initial={{ opacity: 0, y: 16, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ delay: 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-3 font-[family-name:var(--font-display-loaded)] text-4xl italic leading-[0.95] sm:text-6xl"
+          className="mt-2 font-[family-name:var(--font-display-loaded)] text-2xl italic leading-[0.95] sm:text-4xl"
         >
           {displayName}
         </m.h1>
 
-        {/* The certificate — shared design, mirrored by the downloadable PNG. */}
+        {/* The certificate — shared design, mirrored by the downloadable PNG.
+            max-w-xl on desktop keeps the whole page (header + cert + actions)
+            in-viewport on ~768h laptops so the download button is reachable
+            without scrolling. */}
         <m.div
           initial={{ opacity: 0, y: 24, scale: 1.05, rotate: -1.5 }}
           animate={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
           transition={{ delay: 0.35, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-10 w-full max-w-3xl"
+          className="mt-5 w-full max-w-xl"
         >
           <CertificateCard name={displayName} dateLabel={dateLabel} />
         </m.div>
@@ -110,7 +113,7 @@ export function CertificateView({
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.9, duration: 0.5 }}
-          className="mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-5"
+          className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:gap-4"
         >
           <button
             onClick={downloadPng}

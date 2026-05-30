@@ -16,6 +16,22 @@ const BONE_3 = "#beb7a4";
 const RULE = "#5b5240";
 const ACID = "#d2f76b";
 
+/**
+ * Fetch a Google Font subset for satori. Passing `text` returns a tailored TTF
+ * containing only the requested glyphs — keeps the response small and avoids
+ * the multi-subset @font-face splits that Google serves to modern UAs (which
+ * default to WOFF2, a format satori can't read).
+ */
+async function loadGoogleFont(query: string, text: string): Promise<ArrayBuffer> {
+  const url = `https://fonts.googleapis.com/css2?family=${query}&text=${encodeURIComponent(text)}`;
+  const css = await (await fetch(url)).text();
+  const match = css.match(/src: url\((https:[^)]+)\) format\('(opentype|truetype)'\)/);
+  if (!match) throw new Error(`font URL not found for ${query}`);
+  const res = await fetch(match[1]);
+  if (!res.ok) throw new Error(`font fetch failed for ${query} (${res.status})`);
+  return res.arrayBuffer();
+}
+
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ token: string }> },
@@ -55,6 +71,34 @@ export async function GET(
 
   const nameLen = data.display_name.length;
   const nameSize = nameLen > 28 ? 40 : nameLen > 18 ? 52 : 64;
+
+  // Glyph set the satori PNG actually needs. Both fonts share the same subset —
+  // a bit redundant per glyph, but a single concatenation is simpler than
+  // splitting serif vs mono and the per-font subsets stay tiny.
+  const text =
+    c.brand +
+    c.title_line_1 +
+    c.title_line_2 +
+    c.awarded_to.toUpperCase() +
+    data.display_name +
+    c.subtitle.toUpperCase() +
+    dateLabel;
+
+  // Best-effort font load; if Google Fonts is unreachable, fall through to
+  // satori's serif/mono defaults so the PNG still renders.
+  let fonts: Array<{ name: string; data: ArrayBuffer; style: "italic" | "normal"; weight: 400 }> | undefined;
+  try {
+    const [serifData, monoData] = await Promise.all([
+      loadGoogleFont("Instrument+Serif:ital@1", text),
+      loadGoogleFont("IBM+Plex+Mono", text),
+    ]);
+    fonts = [
+      { name: "Instrument Serif", data: serifData, style: "italic", weight: 400 },
+      { name: "IBM Plex Mono", data: monoData, style: "normal", weight: 400 },
+    ];
+  } catch (err) {
+    console.warn("[cert/og] font load failed, using satori defaults:", err);
+  }
 
   const response = new ImageResponse(
     (
@@ -111,7 +155,7 @@ export async function GET(
             style={{
               display: "flex",
               color: ACID,
-              fontFamily: "monospace",
+              fontFamily: "IBM Plex Mono",
               fontSize: 22,
               letterSpacing: 5,
               fontWeight: 500,
@@ -132,7 +176,7 @@ export async function GET(
               lineHeight: 1,
               marginTop: 28,
               textAlign: "center",
-              fontFamily: "serif",
+              fontFamily: "Instrument Serif",
             }}
           >
             <span style={{ display: "flex" }}>{c.title_line_1}</span>
@@ -144,7 +188,7 @@ export async function GET(
             style={{
               display: "flex",
               color: BONE_3,
-              fontFamily: "monospace",
+              fontFamily: "IBM Plex Mono",
               fontSize: 16,
               letterSpacing: 4,
               marginTop: 56,
@@ -160,7 +204,7 @@ export async function GET(
               color: BONE,
               fontSize: nameSize,
               fontStyle: "italic",
-              fontFamily: "serif",
+              fontFamily: "Instrument Serif",
               marginTop: 12,
               maxWidth: 960,
               textAlign: "center",
@@ -175,7 +219,7 @@ export async function GET(
             style={{
               display: "flex",
               color: BONE_2,
-              fontFamily: "monospace",
+              fontFamily: "IBM Plex Mono",
               fontSize: 18,
               letterSpacing: 2,
               marginTop: 56,
@@ -191,7 +235,7 @@ export async function GET(
             style={{
               display: "flex",
               color: BONE_3,
-              fontFamily: "monospace",
+              fontFamily: "IBM Plex Mono",
               fontSize: 16,
               letterSpacing: 4,
               marginTop: 24,
@@ -202,7 +246,7 @@ export async function GET(
         </div>
       </div>
     ),
-    { width, height },
+    { width, height, ...(fonts ? { fonts } : {}) },
   );
 
   // Certificates are immutable once issued — long cache is safe. lang/format

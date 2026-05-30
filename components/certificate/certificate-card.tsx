@@ -49,7 +49,9 @@ export function CertificateCard({
       ))}
       <div className="relative flex h-full flex-col items-center justify-center px-2 text-center sm:px-0">
         <p className="caption-acid text-[10px] sm:text-xs">{t("brand")}</p>
-        <p className="mt-2 font-[family-name:var(--font-display-loaded)] text-2xl italic leading-tight sm:mt-3 sm:text-5xl">
+        {/* Explicit text-bone — without it, `color` would be inherited from
+            <body> (page theme) and stay dark on the card's forced-dark surface. */}
+        <p className="mt-2 font-[family-name:var(--font-display-loaded)] text-2xl italic leading-tight text-bone sm:mt-3 sm:text-5xl">
           {t("title_line_1")}
           <br />
           {t("title_line_2")}
